@@ -1,50 +1,59 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: N/A → 1.0.0
+- Modified principles: N/A (initial version)
+- Added sections: All
+- Removed sections: None
+- Templates requiring updates: plan-template.md (✅ aligned), spec-template.md (✅ aligned), tasks-template.md (✅ aligned)
+- Follow-up TODOs: RATIFICATION_DATE must be set on first adoption.
+-->
+# Krachtbal Scoreboard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Frontend Application Discipline
+The project is a frontend application. All code must be structured for clarity, maintainability, and modularity. UI components, state management, and business logic must be separated.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Rationale:** Clear separation of concerns enables easier testing, maintenance, and future enhancements.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Linting Enforcement
+All code MUST pass linting checks before merging or deployment. The linter configuration is authoritative and must be kept up to date with project standards.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale:** Linting ensures code consistency, prevents common errors, and improves readability across contributors.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Mandatory Testing
+Automated tests (unit and integration) MUST be written for all features and bug fixes. No code may be merged without passing tests. Test coverage must be maintained or improved with each change.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale:** Testing prevents regressions, documents expected behavior, and ensures reliability.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Cross-Platform Single Binary Build
+The application MUST be buildable and executable as a single binary for both Linux and Windows platforms. Build scripts and documentation must guarantee reproducible builds for both targets.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Rationale:** Single-binary distribution simplifies deployment and ensures users on both platforms have equal access.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Build and Execution Simplicity
+Build and run processes must be documented and require minimal steps. All dependencies and environment requirements must be clearly specified. No hidden steps or undocumented requirements are allowed.
+
+**Rationale:** Simplicity reduces onboarding friction and operational risk.
+
+## Additional Constraints
+
+- Technology stack must support cross-platform binary builds (e.g., using frameworks like Tauri, Electron, or similar if applicable).
+- All dependencies must be open source and compatible with both Linux and Windows.
+- Security updates and dependency checks must be performed regularly.
+
+## Development Workflow
+
+- All code changes require code review for linting, testing, and build compliance.
+- CI/CD pipelines must enforce linting, testing, and successful cross-platform builds before merge.
+- Documentation must be updated with any change affecting build, run, or test procedures.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes all other development practices for this project.
+- Amendments require documentation, team approval, and a migration plan if breaking changes are introduced.
+- All PRs and reviews must verify compliance with these principles.
+- Constitution versioning follows semantic versioning: MAJOR for breaking/removal, MINOR for new principles/sections, PATCH for clarifications.
+- Compliance reviews are required at least quarterly or after any major dependency or build system change.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-20 | **Last Amended**: 2024-06-13
