@@ -9,11 +9,11 @@ vi.mock('@tauri-apps/api/event');
 vi.mock('@tauri-apps/api/webviewWindow');
 
 const config: GameConfig = {
-  teamA: { name: 'Eagles', color: '#f00', players: [] },
-  teamB: { name: 'Lions', color: '#00f', players: [] },
+  teamA: { name: 'Eagles', color: '#f00', color2: '#ffffff' },
+  teamB: { name: 'Lions', color: '#00f', color2: '#ffffff' },
   referee: 'R',
+  league: '',
   halfTimeLengthMinutes: 20,
-  numPresentationWindows: 1,
 };
 
 describe('RestMinutePanel', () => {
@@ -31,13 +31,13 @@ describe('RestMinutePanel', () => {
 
   it('initiate button opens InitiatorPopup', async () => {
     render(<RestMinutePanel />);
-    await userEvent.click(screen.getByRole('button', { name: /Initiate Rest Minute/i }));
-    expect(screen.getByText(/Who takes the rest minute/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Rustminuut starten/i }));
+    expect(screen.getByText(/Wie neemt de rustminuut/i)).toBeInTheDocument();
   });
 
   it('countdown shown when rest minute active', () => {
     useGameStore.setState({
-      restMinute: { initiatorTeam: 'A', remainingMs: 45000, buzzerFired: true },
+      restMinute: { initiatorTeam: 'A', remainingMs: 45000, buzzerFired5s: true },
     });
     render(<RestMinutePanel />);
     expect(screen.getByText('00:45')).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe('RestMinutePanel', () => {
   it('disabled when clock stopped', () => {
     useGameStore.setState({ clockRunning: false });
     render(<RestMinutePanel />);
-    expect(screen.getByRole('button', { name: /Initiate Rest Minute/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Rustminuut starten/i })).toBeDisabled();
   });
 });
 

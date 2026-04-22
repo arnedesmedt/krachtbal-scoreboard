@@ -13,7 +13,8 @@ export function PlayerRow({ teamKey, index, onRemove }: PlayerRowProps) {
     formState: { errors },
   } = useFormContext<GameConfigFormData>();
 
-  const playerErrors = errors[teamKey]?.players?.[index];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const playerErrors = (errors[teamKey] as any)?.players?.[index];
 
   return (
     <div className="flex gap-2 items-start">
@@ -22,7 +23,8 @@ export function PlayerRow({ teamKey, index, onRemove }: PlayerRowProps) {
           type="number"
           placeholder="#"
           className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          {...register(`${teamKey}.players.${index}.number`, { valueAsNumber: true })}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          {...(register as any)(`${teamKey}.players.${index}.number`, { valueAsNumber: true })}
         />
         {playerErrors?.number && <p className="text-red-500 text-xs mt-0.5">{playerErrors.number.message}</p>}
       </div>
@@ -31,14 +33,15 @@ export function PlayerRow({ teamKey, index, onRemove }: PlayerRowProps) {
           type="text"
           placeholder="Naam speler"
           className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          {...register(`${teamKey}.players.${index}.name`)}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          {...(register as any)(`${teamKey}.players.${index}.name`)}
         />
         {playerErrors?.name && <p className="text-red-500 text-xs mt-0.5">{playerErrors.name.message}</p>}
       </div>
       <button
         type="button"
         onClick={onRemove}
-        aria-label="Remove player"
+        aria-label="Speler verwijderen"
         className="mt-1 text-slate-400 hover:text-red-500 transition-colors"
       >
         ✕

@@ -10,18 +10,22 @@ export function PresentationWindowCountField() {
   const phase = useGameStore((s) => s.phase);
   const isDisabled = phase !== 'SETUP';
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anyErrors = errors as any;
+
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-600 mb-1">Presentation Windows</label>
+      <label className="block text-sm font-medium text-slate-600 mb-1">Presentatieschermen</label>
       <input
         type="number"
         min={1}
         max={10}
         disabled={isDisabled}
         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
-        {...register('numPresentationWindows', { valueAsNumber: true })}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {...(register as any)('numPresentationWindows', { valueAsNumber: true })}
       />
-      {errors.numPresentationWindows && <p className="text-red-500 text-xs mt-1">{errors.numPresentationWindows.message}</p>}
+      {anyErrors.numPresentationWindows && <p className="text-red-500 text-xs mt-1">{anyErrors.numPresentationWindows.message}</p>}
     </div>
   );
 }

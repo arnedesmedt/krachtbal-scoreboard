@@ -9,8 +9,8 @@ const validConfig: GameConfig = {
   teamA: { name: 'Team Alpha', color: '#FF0000', color2: '#ffffff' },
   teamB: { name: 'Team Beta', color: '#0000FF', color2: '#ffffff' },
   referee: 'Ref Joe',
+  league: '',
   halfTimeLengthMinutes: 20,
-  numPresentationWindows: 1,
 };
 
 function resetStore() {

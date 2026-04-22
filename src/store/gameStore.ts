@@ -16,14 +16,21 @@ function safeEmit(event: string, payload: unknown) {
   broadcastChannel?.postMessage({ event, payload });
 }
 
-function openPresentationWindow(label: string, url: string, title: string) {
+async function openPresentationWindow(label: string, url: string, title: string) {
   if (isTauri) {
-    new WebviewWindow(label, { url, title, fullscreen: true });
+    const existing = await WebviewWindow.getByLabel(label);
+    if (existing) {
+      await existing.setFocus();
+    } else {
+      new WebviewWindow(label, { url, title });
+    }
   } else {
     // Append timestamp so a closed window can always be reopened
-    window.open(url, `${label}-${Date.now()}`, 'popup,width=1280,height=720');
+    window.open(url, '_blank');
   }
 }
+
+export type PresentationTheme = 'light' | 'dark'; // re-exported for convenience
 
 let _playBuzzer: (() => void) | null = null;
 export function setBuzzerFn(fn: () => void) { _playBuzzer = fn; }
@@ -48,6 +55,7 @@ const initialState: GameState = {
   restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
   restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
   restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  presentationTheme: 'light',
 };
 
 function buildPayload(state: GameState): GameStateUpdatePayload {
@@ -80,6 +88,7 @@ function buildPayload(state: GameState): GameStateUpdatePayload {
     restMinutesUsedA: state.restMinutesUsedA,
     restMinutesUsedB: state.restMinutesUsedB,
     restMinutesUsedReferee: state.restMinutesUsedReferee,
+    presentationTheme: state.presentationTheme,
   };
 }
 
@@ -88,6 +97,7 @@ interface GameActions {
   startGame: () => void;
   openPresentationWindows: () => void;
   openSinglePresentationWindow: () => void;
+  togglePresentationTheme: () => void;
   toggleClock: () => void;
   adjustScore: (team: 'A' | 'B', delta: number) => void;
   addTeamPenalty: (team: 'A' | 'B') => void;
@@ -124,11 +134,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   openPresentationWindows() {
-    openPresentationWindow('presentation', '/#/presentation', 'Scoreboard');
+    const theme = get().presentationTheme;
+    openPresentationWindow('presentation', `/#/presentation?theme=${theme}`, 'Scoreboard').catch(console.error);
   },
 
   openSinglePresentationWindow() {
-    openPresentationWindow('presentation', '/#/presentation', 'Scoreboard');
+    const theme = get().presentationTheme;
+    openPresentationWindow('presentation', `/#/presentation?theme=${theme}`, 'Scoreboard').catch(console.error);
+  },
+
+  togglePresentationTheme() {
+    set((s) => ({ presentationTheme: s.presentationTheme === 'light' ? 'dark' : 'light' }));
+    safeEmit('game-state-update', buildPayload(get()));
   },
 
   toggleClock() {

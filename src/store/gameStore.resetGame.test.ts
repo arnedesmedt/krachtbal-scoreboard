@@ -6,19 +6,11 @@ vi.mock('@tauri-apps/api/event');
 vi.mock('@tauri-apps/api/webviewWindow');
 
 const validConfig: GameConfig = {
-  teamA: {
-    name: 'Team Alpha',
-    color: '#FF0000',
-    players: [{ number: 1, name: 'Alice', penalties: 0 }],
-  },
-  teamB: {
-    name: 'Team Beta',
-    color: '#0000FF',
-    players: [{ number: 1, name: 'Bob', penalties: 0 }],
-  },
+  teamA: { name: 'Team Alpha', color: '#FF0000', color2: '#ffffff' },
+  teamB: { name: 'Team Beta', color: '#0000FF', color2: '#ffffff' },
   referee: 'Ref Joe',
   halfTimeLengthMinutes: 1,
-  numPresentationWindows: 2,
+  league: '',
 };
 
 function resetStore() {

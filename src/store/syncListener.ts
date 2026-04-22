@@ -34,6 +34,8 @@ function buildPayloadFromStore(state: ReturnType<typeof useGameStore.getState>):
     phase: state.phase,
     scoreA: state.scoreA,
     scoreB: state.scoreB,
+    penaltiesA: state.penaltiesA,
+    penaltiesB: state.penaltiesB,
     playedTimeMs: state.playedTimeMs,
     halfTimeLengthMs,
     clockRunning: state.clockRunning,
@@ -49,5 +51,6 @@ function buildPayloadFromStore(state: ReturnType<typeof useGameStore.getState>):
     restMinutesUsedA: state.restMinutesUsedA,
     restMinutesUsedB: state.restMinutesUsedB,
     restMinutesUsedReferee: state.restMinutesUsedReferee,
+    presentationTheme: state.presentationTheme,
   };
 }

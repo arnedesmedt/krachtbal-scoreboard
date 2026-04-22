@@ -11,11 +11,15 @@ const basePayload: GameStateUpdatePayload = {
   halfTimeLengthMs: 1200000,
   clockRunning: false,
   restMinute: null,
-  teamA: { name: 'Eagles', color: '#ff0000', players: [] },
-  teamB: { name: 'Lions', color: '#0000ff', players: [] },
+  teamA: { name: 'Eagles', color: '#ff0000', color2: '#ffffff' },
+  teamB: { name: 'Lions', color: '#0000ff', color2: '#ffffff' },
   referee: 'Ref Sam',
-  restMinutesUsedA: 0,
-  restMinutesUsedB: 0,
+  league: '',
+  penaltiesA: 0,
+  penaltiesB: 0,
+  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
 };
 
 describe('RestMinuteDisplay', () => {
@@ -27,7 +31,7 @@ describe('RestMinuteDisplay', () => {
   it('shows countdown and team name when restMinute is active', () => {
     const payload: GameStateUpdatePayload = {
       ...basePayload,
-      restMinute: { initiatorTeam: 'A', remainingMs: 45000, buzzerFired: true },
+      restMinute: { initiatorTeam: 'A', remainingMs: 45000, buzzerFired5s: true },
     };
     render(<RestMinuteDisplay payload={payload} />);
     expect(screen.getByText(/Eagles/i)).toBeInTheDocument();

@@ -1,5 +1,6 @@
-import { useFormContext } from 'react-hook-form';
+ import { useFormContext } from 'react-hook-form';
 import type { GameConfigFormData } from '../../utils/configSchema';
+import { LEAGUES } from '../../data/leagues';
 
 export function LeagueField() {
   const {
@@ -10,14 +11,18 @@ export function LeagueField() {
   return (
     <div>
       <label className="block text-sm font-medium text-slate-600 mb-1">Competitie</label>
-      <input
-        type="text"
-        placeholder="bijv. Nationale Liga A"
-        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+      <select
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
         {...register('league')}
-      />
+      >
+        <option value="">— Kies een competitie —</option>
+        {LEAGUES.map((league) => (
+          <option key={league} value={league}>
+            {league}
+          </option>
+        ))}
+      </select>
       {errors.league && <p className="text-red-500 text-xs mt-1">{errors.league.message}</p>}
     </div>
   );
 }
-

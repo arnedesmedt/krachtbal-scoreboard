@@ -10,6 +10,8 @@ const samplePayload: GameStateUpdatePayload = {
   phase: 'FIRST_HALF',
   scoreA: 2,
   scoreB: 1,
+  penaltiesA: 0,
+  penaltiesB: 0,
   playedTimeMs: 5000,
   halfTimeLengthMs: 1200000,
   clockRunning: true,

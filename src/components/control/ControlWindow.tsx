@@ -15,6 +15,8 @@ export default function ControlWindow() {
   const phase = useGameStore((s) => s.phase);
   const league = useGameStore((s) => s.config?.league);
   const openSinglePresentationWindow = useGameStore((s) => s.openSinglePresentationWindow);
+  const presentationTheme = useGameStore((s) => s.presentationTheme);
+  const togglePresentationTheme = useGameStore((s) => s.togglePresentationTheme);
   useBuzzer();
   useGameTimer();
 
@@ -39,6 +41,14 @@ export default function ControlWindow() {
               {phaseLabel(phase)}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => togglePresentationTheme()}
+            title={presentationTheme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
+            className="ml-2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
+          >
+            {presentationTheme === 'light' ? '☀️' : '🌙'}
+          </button>
           <button
             type="button"
             onClick={() => openSinglePresentationWindow()}

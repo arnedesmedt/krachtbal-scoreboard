@@ -5,13 +5,14 @@ const MAX_PENALTIES = 3;
 
 interface ScoreBoardProps {
   payload: GameStateUpdatePayload;
+  theme?: 'light' | 'dark';
 }
 
-function PenaltyXs({ count, size }: { count: number; size: string }) {
+function PenaltyXs({ count, size, theme = 'light' }: { count: number; size: string; theme?: 'light' | 'dark' }) {
   return (
     <div className="flex gap-[0.4vw] justify-center mt-[0.5vh]">
       {Array.from({ length: MAX_PENALTIES }).map((_, i) => (
-        <span key={i} style={{ fontSize: size, color: i < count ? '#ef4444' : 'rgba(255,255,255,0.15)', fontWeight: 900 }}>
+        <span key={i} style={{ fontSize: size, color: i < count ? '#ef4444' : theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)', fontWeight: 900 }}>
           ✕
         </span>
       ))}
@@ -19,12 +20,51 @@ function PenaltyXs({ count, size }: { count: number; size: string }) {
   );
 }
 
-export function ScoreBoard({ payload }: ScoreBoardProps) {
+function RestMinuteIcons({ firstHalf, secondHalf, theme = 'light' }: { firstHalf: number; secondHalf: number; theme?: 'light' | 'dark' }) {
+  const takenColor = '#22c55e'; // green-500
+  const emptyColor = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+  const dividerColor = theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)';
+  const MAX_PER_HALF = 2;
+  const dotSize = '1.4vw';
+  return (
+    <div className="flex gap-[0.4vw] justify-center items-center mt-[0.6vh]">
+      {Array.from({ length: MAX_PER_HALF }).map((_, i) => (
+        <span
+          key={`f${i}`}
+          style={{
+            display: 'inline-block',
+            width: dotSize,
+            height: dotSize,
+            borderRadius: '50%',
+            backgroundColor: i < firstHalf ? takenColor : emptyColor,
+          }}
+        />
+      ))}
+      <span style={{ fontSize: '1.6vw', color: dividerColor, margin: '0 0.3vw', lineHeight: 1 }}>|</span>
+      {Array.from({ length: MAX_PER_HALF }).map((_, i) => (
+        <span
+          key={`s${i}`}
+          style={{
+            display: 'inline-block',
+            width: dotSize,
+            height: dotSize,
+            borderRadius: '50%',
+            backgroundColor: i < secondHalf ? takenColor : emptyColor,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function ScoreBoard({ payload, theme = 'light' }: ScoreBoardProps) {
   const header = [payload.league, phaseLabel(payload.phase)].filter(Boolean).join(' — ');
+  const textMuted = theme === 'dark' ? 'text-gray-400' : 'text-gray-500';
+  const textScore = theme === 'dark' ? 'text-white' : 'text-gray-900';
   return (
     <div className="text-center">
       {header && (
-        <div className="font-bold uppercase tracking-widest mb-[3vh] text-gray-400" style={{ fontSize: '2.5vw' }}>
+        <div className={`font-bold uppercase tracking-widest mb-[3vh] ${textMuted}`} style={{ fontSize: '2.5vw' }}>
           {header}
         </div>
       )}
@@ -38,7 +78,7 @@ export function ScoreBoard({ payload }: ScoreBoardProps) {
             {payload.teamA.name}
           </div>
         </div>
-        <div className="flex items-center justify-center font-semibold uppercase tracking-widest text-gray-400" style={{ fontSize: '2vw', padding: '0 2vw' }}>vs</div>
+        <div className={`flex items-center justify-center font-semibold uppercase tracking-widest ${textMuted}`} style={{ fontSize: '2vw', padding: '0 2vw' }}>vs</div>
         <div className="flex items-center justify-center">
           <div
             className="font-bold text-white rounded-2xl"
@@ -48,22 +88,27 @@ export function ScoreBoard({ payload }: ScoreBoardProps) {
           </div>
         </div>
         {/* Row 2: penalty X's + referee centered under vs */}
-        <div className="flex justify-center"><PenaltyXs count={payload.penaltiesA} size="3vw" /></div>
-        <div className="flex items-center justify-center text-gray-400" style={{ fontSize: '1.5vw', padding: '0 1vw' }}>
-          {payload.referee ? `Scheidsrechter: ${payload.referee}` : ''}
+        <div className="flex flex-col items-center">
+          <PenaltyXs count={payload.penaltiesA} size="3vw" theme={theme} />
+          <RestMinuteIcons firstHalf={payload.restMinutesUsedA.FIRST_HALF} secondHalf={payload.restMinutesUsedA.SECOND_HALF} theme={theme} />
         </div>
-        <div className="flex justify-center"><PenaltyXs count={payload.penaltiesB} size="3vw" /></div>
+        <div className={`flex flex-col items-center justify-center ${textMuted}`} style={{ fontSize: '1.5vw', padding: '0 1vw' }}>
+          {payload.referee ? <span>{`Scheidsrechter: ${payload.referee}`}</span> : ''}
+        </div>
+        <div className="flex flex-col items-center">
+          <PenaltyXs count={payload.penaltiesB} size="3vw" theme={theme} />
+          <RestMinuteIcons firstHalf={payload.restMinutesUsedB.FIRST_HALF} secondHalf={payload.restMinutesUsedB.SECOND_HALF} theme={theme} />
+        </div>
       </div>
       <div className="flex items-center justify-center leading-none" style={{ fontSize: '14vw', gap: '2vw' }}>
-        <span className="font-black text-white tabular-nums text-right" style={{ minWidth: '16vw' }}>
+        <span className={`font-black tabular-nums text-right ${textScore}`} style={{ minWidth: '16vw' }}>
           {payload.scoreA}
         </span>
-        <span className="font-black text-white" style={{ fontSize: '8vw' }}>–</span>
-        <span className="font-black text-white tabular-nums text-left" style={{ minWidth: '16vw' }}>
+        <span className={`font-black ${textScore}`} style={{ fontSize: '8vw' }}>–</span>
+        <span className={`font-black tabular-nums text-left ${textScore}`} style={{ minWidth: '16vw' }}>
           {payload.scoreB}
         </span>
       </div>
     </div>
   );
 }
-

@@ -14,30 +14,34 @@ const payload: GameStateUpdatePayload = {
   teamA: {
     name: 'Eagles',
     color: '#ff0000',
-    players: [{ number: 7, name: 'Alice', penalties: 3 }],
+    color2: '#ffffff',
   },
   teamB: {
     name: 'Lions',
     color: '#0000ff',
-    players: [{ number: 5, name: 'Bob', penalties: 0 }],
+    color2: '#ffffff',
   },
   referee: 'Ref Sam',
-  restMinutesUsedA: 0,
-  restMinutesUsedB: 0,
+  league: '',
+  penaltiesA: 3,
+  penaltiesB: 0,
+  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
 };
 
 describe('PenaltyDisplay', () => {
-  it('renders exactly 3 X characters for a player with 3 penalties', () => {
+  it('renders team names', () => {
     render(<PenaltyDisplay payload={payload} />);
-    const xCells = screen.getAllByText('XXX');
-    expect(xCells).toHaveLength(1);
-    expect(xCells[0].textContent).toBe('XXX');
+    expect(screen.getByText('Eagles')).toBeInTheDocument();
+    expect(screen.getByText('Lions')).toBeInTheDocument();
   });
 
-  it('renders empty for a player with 0 penalties', () => {
+  it('renders penalty X markers for team A', () => {
     render(<PenaltyDisplay payload={payload} />);
-    // Bob has 0 penalties — his penalty cell should be empty
-    expect(screen.getByText('Bob')).toBeInTheDocument();
+    // penaltiesA is 3, penaltiesB is 0 — all 6 X markers are rendered but only 3 are red
+    const markers = screen.getAllByText('✕');
+    expect(markers).toHaveLength(6);
   });
 });
 

@@ -8,11 +8,11 @@ vi.mock('@tauri-apps/api/event');
 vi.mock('@tauri-apps/api/webviewWindow');
 
 const validConfig: GameConfig = {
-  teamA: { name: 'A', color: '#ff0000', players: [{ number: 1, name: 'P', penalties: 0 }] },
-  teamB: { name: 'B', color: '#0000ff', players: [{ number: 1, name: 'Q', penalties: 0 }] },
+  teamA: { name: 'A', color: '#ff0000', color2: '#ffffff' },
+  teamB: { name: 'B', color: '#0000ff', color2: '#ffffff' },
   referee: 'R',
+  league: '',
   halfTimeLengthMinutes: 30,
-  numPresentationWindows: 1,
 };
 
 describe('useGameTimer', () => {
@@ -26,10 +26,8 @@ describe('useGameTimer', () => {
       playedTimeMs: 0,
       clockRunning: false,
       restMinute: null,
-      restMinutesUsedA: 0,
-      restMinutesUsedB: 0,
-      teamAPlayers: [],
-      teamBPlayers: [],
+      restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
+      restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
     });
   });
 

@@ -9,11 +9,11 @@ vi.mock('@tauri-apps/api/event');
 vi.mock('@tauri-apps/api/webviewWindow');
 
 const config: GameConfig = {
-  teamA: { name: 'Eagles', color: '#f00', players: [] },
-  teamB: { name: 'Lions', color: '#00f', players: [] },
+  teamA: { name: 'Eagles', color: '#f00', color2: '#ffffff' },
+  teamB: { name: 'Lions', color: '#00f', color2: '#ffffff' },
   referee: 'R',
+  league: '',
   halfTimeLengthMinutes: 20,
-  numPresentationWindows: 1,
 };
 
 describe('ScorePanel', () => {
@@ -25,7 +25,7 @@ describe('ScorePanel', () => {
     const adjustScore = vi.fn();
     useGameStore.setState({ adjustScore } as never);
     render(<ScorePanel team="A" />);
-    await userEvent.click(screen.getByRole('button', { name: /Increase score Team A/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Score verhogen Team A/i }));
     expect(adjustScore).toHaveBeenCalledWith('A', 1);
   });
 
@@ -33,20 +33,20 @@ describe('ScorePanel', () => {
     const adjustScore = vi.fn();
     useGameStore.setState({ scoreA: 1, adjustScore } as never);
     render(<ScorePanel team="A" />);
-    await userEvent.click(screen.getByRole('button', { name: /Decrease score Team A/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Score verlagen Team A/i }));
     expect(adjustScore).toHaveBeenCalledWith('A', -1);
   });
 
   it('decrement disabled at score 0', () => {
     render(<ScorePanel team="A" />);
-    expect(screen.getByRole('button', { name: /Decrease score Team A/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Score verlagen Team A/i })).toBeDisabled();
   });
 
   it('penalty button dispatches addTeamPenalty(A)', async () => {
     const addTeamPenalty = vi.fn();
     useGameStore.setState({ addTeamPenalty } as never);
     render(<ScorePanel team="A" />);
-    await userEvent.click(screen.getByRole('button', { name: /Add penalty Team A/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Straf toevoegen Team A/i }));
     expect(addTeamPenalty).toHaveBeenCalledWith('A');
   });
 });

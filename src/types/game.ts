@@ -27,6 +27,8 @@ export interface RestMinutesPerHalf {
   SECOND_HALF: number;
 }
 
+export type PresentationTheme = 'dark' | 'light';
+
 export interface GameState {
   phase: GamePhase;
   config: GameConfig | null;
@@ -40,6 +42,7 @@ export interface GameState {
   restMinutesUsedA: RestMinutesPerHalf;
   restMinutesUsedB: RestMinutesPerHalf;
   restMinutesUsedReferee: RestMinutesPerHalf;
+  presentationTheme: PresentationTheme;
 }
 
 export type GameStateUpdatePayload = {
@@ -59,4 +62,5 @@ export type GameStateUpdatePayload = {
   restMinutesUsedA: RestMinutesPerHalf;
   restMinutesUsedB: RestMinutesPerHalf;
   restMinutesUsedReferee: RestMinutesPerHalf;
+  presentationTheme: PresentationTheme;
 };
