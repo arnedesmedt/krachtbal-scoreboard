@@ -1,0 +1,288 @@
+import { create } from 'zustand';
+import { emit } from '@tauri-apps/api/event';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import type { GameState, GameConfig, GameStateUpdatePayload, RestMinuteInitiator } from '../types/game';
+
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+export const BROADCAST_CHANNEL_NAME = 'krachtbal-scoreboard';
+const broadcastChannel =
+  typeof window !== 'undefined' && !isTauri ? new BroadcastChannel(BROADCAST_CHANNEL_NAME) : null;
+
+function safeEmit(event: string, payload: unknown) {
+  if (isTauri) {
+    emit(event, payload).catch(console.error);
+  }
+  broadcastChannel?.postMessage({ event, payload });
+}
+
+function openPresentationWindow(label: string, url: string, title: string) {
+  if (isTauri) {
+    new WebviewWindow(label, { url, title, fullscreen: true });
+  } else {
+    // Append timestamp so a closed window can always be reopened
+    window.open(url, `${label}-${Date.now()}`, 'popup,width=1280,height=720');
+  }
+}
+
+let _playBuzzer: (() => void) | null = null;
+export function setBuzzerFn(fn: () => void) { _playBuzzer = fn; }
+function playBuzzer() { _playBuzzer?.(); }
+
+const ACTIVE_HALVES = ['FIRST_HALF', 'SECOND_HALF'] as const;
+type ActiveHalf = (typeof ACTIVE_HALVES)[number];
+function isActiveHalf(phase: string): phase is ActiveHalf {
+  return ACTIVE_HALVES.includes(phase as ActiveHalf);
+}
+
+const initialState: GameState = {
+  phase: 'SETUP',
+  config: null,
+  scoreA: 0,
+  scoreB: 0,
+  penaltiesA: 0,
+  penaltiesB: 0,
+  playedTimeMs: 0,
+  clockRunning: false,
+  restMinute: null,
+  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+};
+
+function buildPayload(state: GameState): GameStateUpdatePayload {
+  const half = (state.phase === 'FIRST_HALF' || state.phase === 'SECOND_HALF') ? state.phase : 'FIRST_HALF';
+  const baseHalfMs = state.config ? state.config.halfTimeLengthMinutes * 60 * 1000 : 0;
+  const totalRestMs = (
+    state.restMinutesUsedA[half] +
+    state.restMinutesUsedB[half] +
+    state.restMinutesUsedReferee[half]
+  ) * 60_000;
+  const halfTimeLengthMs = baseHalfMs + totalRestMs;
+  return {
+    phase: state.phase,
+    scoreA: state.scoreA,
+    scoreB: state.scoreB,
+    penaltiesA: state.penaltiesA,
+    penaltiesB: state.penaltiesB,
+    playedTimeMs: state.playedTimeMs,
+    halfTimeLengthMs,
+    clockRunning: state.clockRunning,
+    restMinute: state.restMinute,
+    teamA: state.config
+      ? { name: state.config.teamA.name, color: state.config.teamA.color, color2: state.config.teamA.color2 }
+      : { name: '', color: '#ffffff', color2: '#ffffff' },
+    teamB: state.config
+      ? { name: state.config.teamB.name, color: state.config.teamB.color, color2: state.config.teamB.color2 }
+      : { name: '', color: '#ffffff', color2: '#ffffff' },
+    referee: state.config?.referee ?? '',
+    league: state.config?.league ?? '',
+    restMinutesUsedA: state.restMinutesUsedA,
+    restMinutesUsedB: state.restMinutesUsedB,
+    restMinutesUsedReferee: state.restMinutesUsedReferee,
+  };
+}
+
+interface GameActions {
+  setConfig: (config: GameConfig) => void;
+  startGame: () => void;
+  openPresentationWindows: () => void;
+  openSinglePresentationWindow: () => void;
+  toggleClock: () => void;
+  adjustScore: (team: 'A' | 'B', delta: number) => void;
+  addTeamPenalty: (team: 'A' | 'B') => void;
+  startRestMinute: () => void;
+  assignRestMinute: (initiator: RestMinuteInitiator) => void;
+  cancelRestMinute: () => void;
+  tickRestMinute: (deltaMs: number) => void;
+  tickClock: (deltaMs: number) => void;
+  clearRestMinute: () => void;
+  startSecondHalf: () => void;
+  resetGame: () => void;
+  abandonGame: () => Promise<void>;
+}
+
+type GameStore = GameState & GameActions;
+
+export const useGameStore = create<GameStore>((set, get) => ({
+  ...initialState,
+
+  setConfig(config) {
+    if (get().phase !== 'SETUP') return;
+    set({ config });
+    safeEmit('game-state-update', buildPayload({ ...get(), config }));
+  },
+
+  startGame() {
+    const state = get();
+    if (state.phase !== 'SETUP') return;
+    const { config } = state;
+    if (!config) return;
+    if (!config.teamA?.name || !config.teamB?.name || !config.referee) return;
+    set({ phase: 'FIRST_HALF', clockRunning: false });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  openPresentationWindows() {
+    openPresentationWindow('presentation', '/#/presentation', 'Scoreboard');
+  },
+
+  openSinglePresentationWindow() {
+    openPresentationWindow('presentation', '/#/presentation', 'Scoreboard');
+  },
+
+  toggleClock() {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    set({ clockRunning: !state.clockRunning });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  adjustScore(team, delta) {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    if (team === 'A') {
+      const newScore = state.scoreA + delta;
+      if (newScore < 0) return;
+      set({ scoreA: newScore });
+    } else {
+      const newScore = state.scoreB + delta;
+      if (newScore < 0) return;
+      set({ scoreB: newScore });
+    }
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  addTeamPenalty(team) {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    if (team === 'A') {
+      const next = (state.penaltiesA + 1) % 4; // 0→1→2→3→0
+      set({ penaltiesA: next });
+    } else {
+      const next = (state.penaltiesB + 1) % 4;
+      set({ penaltiesB: next });
+    }
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  // Start rest minute immediately (pending initiator assignment)
+  startRestMinute() {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    if (state.restMinute !== null) return;
+    if (!state.clockRunning) return;
+    set({ restMinute: { initiatorTeam: null, remainingMs: 60_000, buzzerFired5s: false } });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  // Assign initiator after popup selection — increment counter immediately
+  assignRestMinute(initiator) {
+    const state = get();
+    if (!state.restMinute) return;
+    const half = state.phase as 'FIRST_HALF' | 'SECOND_HALF';
+    set({
+      restMinute: { ...state.restMinute, initiatorTeam: initiator },
+      restMinutesUsedA: initiator === 'A'
+        ? { ...state.restMinutesUsedA, [half]: state.restMinutesUsedA[half] + 1 }
+        : state.restMinutesUsedA,
+      restMinutesUsedB: initiator === 'B'
+        ? { ...state.restMinutesUsedB, [half]: state.restMinutesUsedB[half] + 1 }
+        : state.restMinutesUsedB,
+      restMinutesUsedReferee: initiator === 'referee'
+        ? { ...state.restMinutesUsedReferee, [half]: state.restMinutesUsedReferee[half] + 1 }
+        : state.restMinutesUsedReferee,
+    });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  // Cancel a pending or active rest minute
+  cancelRestMinute() {
+    const state = get();
+    if (!state.restMinute) return;
+    set({ restMinute: null });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  tickRestMinute(deltaMs) {
+    const state = get();
+    if (!state.restMinute) return;
+    const remaining = state.restMinute.remainingMs - deltaMs;
+    if (remaining <= 0) {
+      get().clearRestMinute();
+    } else {
+      // Fire 5-second buzzer once — trigger slightly early to compensate for audio output latency
+      const crossed5s = !state.restMinute.buzzerFired5s && remaining <= 5_150;
+      if (crossed5s) playBuzzer();
+      set({ restMinute: { ...state.restMinute, remainingMs: remaining, buzzerFired5s: state.restMinute.buzzerFired5s || crossed5s } });
+      safeEmit('game-state-update', buildPayload(get()));
+    }
+  },
+
+  clearRestMinute() {
+    const state = get();
+    if (!state.restMinute) return;
+    // Counter was already incremented in assignRestMinute; just clear the rest minute
+    set({ restMinute: null });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  tickClock(deltaMs) {
+    const state = get();
+    if (!state.clockRunning) return;
+    if (!isActiveHalf(state.phase)) return;
+    const half = state.phase;
+    const baseHalfMs = (state.config?.halfTimeLengthMinutes ?? 0) * 60 * 1000;
+    const totalRestMs = (
+      state.restMinutesUsedA[half] +
+      state.restMinutesUsedB[half] +
+      state.restMinutesUsedReferee[half]
+    ) * 60_000;
+    const halfTimeLengthMs = baseHalfMs + totalRestMs;
+    const newTime = state.playedTimeMs + deltaMs;
+    // Fire 1-minute warning buzzer when crossing the 1-minute-remaining threshold
+    const threshold1m = halfTimeLengthMs - 60_000;
+    if (threshold1m > 0 && state.playedTimeMs < threshold1m && newTime >= threshold1m) {
+      playBuzzer();
+    }
+    if (newTime >= halfTimeLengthMs && halfTimeLengthMs > 0) {
+      if (state.phase === 'FIRST_HALF') {
+        playBuzzer();
+        set({ playedTimeMs: halfTimeLengthMs, clockRunning: false, phase: 'HALF_TIME' });
+      } else if (state.phase === 'SECOND_HALF') {
+        playBuzzer();
+        set({ playedTimeMs: halfTimeLengthMs, clockRunning: false, phase: 'ENDED' });
+      }
+    } else {
+      set({ playedTimeMs: newTime });
+    }
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  startSecondHalf() {
+    if (get().phase !== 'HALF_TIME') return;
+    set({ phase: 'SECOND_HALF', playedTimeMs: 0, clockRunning: false });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  async resetGame() {
+    const state = get();
+    if (state.phase !== 'ENDED') return;
+    if (isTauri) {
+      const win = await WebviewWindow.getByLabel('presentation');
+      await win?.close();
+    }
+    set({ ...initialState });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  async abandonGame() {
+    if (isTauri) {
+      const win = await WebviewWindow.getByLabel('presentation');
+      await win?.close();
+    }
+    set({ ...initialState });
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+}));
+

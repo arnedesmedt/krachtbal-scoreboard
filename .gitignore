@@ -1,0 +1,15 @@
+# Krachtbal Scoreboard
+
+node_modules/
+dist/
+build/
+*.log
+.env*
+target/
+src-tauri/target/
+coverage/
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
