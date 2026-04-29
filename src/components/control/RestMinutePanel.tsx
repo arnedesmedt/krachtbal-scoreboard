@@ -78,18 +78,7 @@ export function RestMinutePanel() {
         </div>
       </div>
 
-      {/* Total Stats */}
-      <div className="mb-4">
-        <div 
-          className="text-slate-400 text-center"
-          style={{ fontSize: 'clamp(0.625rem, 1.1vw, 0.75rem)' }}
-        >
-          Totaal: A:{restMinutesUsedA.FIRST_HALF + restMinutesUsedA.SECOND_HALF} | 
-          B:{restMinutesUsedB.FIRST_HALF + restMinutesUsedB.SECOND_HALF} | 
-          Ref:{restMinutesUsedReferee.FIRST_HALF + restMinutesUsedReferee.SECOND_HALF}
-        </div>
-      </div>
-
+      
       {/* Active Rest Minute Display */}
       {restMinute && (
         <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200/50">
