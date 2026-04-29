@@ -32,6 +32,7 @@ const DEFAULT_PAYLOAD: GameStateUpdatePayload = {
 export default function PresentationWindow() {
   const [state, setState] = useState<GameStateUpdatePayload>(DEFAULT_PAYLOAD);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showLastMinuteOverlay, setShowLastMinuteOverlay] = useState(false);
   const windowLabel = 'presentation';
 
   const toggleFullscreen = useCallback(async () => {
@@ -54,6 +55,26 @@ export default function PresentationWindow() {
   }, []);
 
   const theme = state.presentationTheme ?? 'light';
+
+  // Detect when last minute starts and show overlay
+  useEffect(() => {
+    if (!state.halfTimeLengthMs || !state.playedTimeMs) return;
+    
+    const timeRemaining = state.halfTimeLengthMs - state.playedTimeMs;
+    const lastMinuteThreshold = 60_000; // 1 minute in milliseconds
+    
+    // Show overlay when we enter the last minute
+    if (timeRemaining <= lastMinuteThreshold && timeRemaining > lastMinuteThreshold - 100) {
+      setShowLastMinuteOverlay(true);
+      
+      // Hide overlay after 5 seconds
+      const timer = setTimeout(() => {
+        setShowLastMinuteOverlay(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [state.playedTimeMs, state.halfTimeLengthMs]);
 
   useEffect(() => {
     if (isTauri) {
@@ -93,6 +114,24 @@ export default function PresentationWindow() {
 
   const hasRestMinute = !!state.restMinute;
 
+  // Add CSS animation for fade in/out effect
+  useEffect(() => {
+    const styleId = 'last-minute-overlay-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: scale(0.8); }
+          20% { opacity: 1; transform: scale(1); }
+          80% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.8); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <div
       className={`h-screen flex flex-col p-8 overflow-hidden ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}
@@ -116,13 +155,36 @@ export default function PresentationWindow() {
         </button>
       )}
       <ScoreBoard payload={state} theme={theme} />
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center relative">
         {hasRestMinute ? (
           <RestMinuteDisplay payload={state} theme={theme} />
         ) : (
           <TimerDisplay payload={state} theme={theme} />
         )}
+        
+        {/* Last minute overlay */}
+        {showLastMinuteOverlay && (
+          <div 
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ 
+              zIndex: 10,
+              animation: 'fadeInOut 5s ease-in-out'
+            }}
+          >
+            <div 
+              className="bg-red-600 text-white rounded-2xl text-center px-8 py-6 shadow-2xl"
+              style={{ 
+                fontSize: '4vw', 
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                transition: 'all 0.5s ease-in-out'
+              }}
+            >
+              Laatste Minuut!
+            </div>
+          </div>
+        )}
       </div>
-    </div>
   );
 }
