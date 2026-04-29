@@ -3,7 +3,7 @@ export interface Game {
   datetime: string; // ISO string
   homeTeamId: string;
   awayTeamId: string;
-  referee: string;
+  refereeId: string;
   leagueId: string;
 }
 
@@ -13,47 +13,47 @@ export const GAMES: Game[] = [
     datetime: '2026-04-29T10:00:00',
     homeTeamId: 'team-1',
     awayTeamId: 'team-2',
-    referee: 'Jan Janssen',
-    leagueId: 'u14'
+    refereeId: 'ref-1',
+    leagueId: 'u14-jongens'
   },
   {
     id: 'game-2',
     datetime: '2026-04-29T11:30:00',
     homeTeamId: 'team-3',
     awayTeamId: 'team-4',
-    referee: 'Piet Pietersen',
-    leagueId: 'u16'
+    refereeId: 'ref-2',
+    leagueId: 'u16-jongens'
   },
   {
     id: 'game-3',
     datetime: '2026-04-29T13:00:00',
     homeTeamId: 'team-5',
     awayTeamId: 'team-6',
-    referee: 'Karel De Smet',
-    leagueId: 'u18'
+    refereeId: 'ref-3',
+    leagueId: 'u18-jongens'
   },
   {
     id: 'game-4',
     datetime: '2026-04-29T14:30:00',
     homeTeamId: 'team-2',
     awayTeamId: 'team-3',
-    referee: 'Tom Van Damme',
-    leagueId: 'seniors'
+    refereeId: 'ref-4',
+    leagueId: 'hoger-heren'
   },
   {
     id: 'game-5',
     datetime: '2026-04-29T16:00:00',
     homeTeamId: 'team-1',
     awayTeamId: 'team-4',
-    referee: 'Luc Verbeeck',
-    leagueId: 'veterans'
+    refereeId: 'ref-5',
+    leagueId: 'hoger-dames'
   },
   {
     id: 'game-6',
     datetime: '2026-04-30T10:00:00',
     homeTeamId: 'team-6',
     awayTeamId: 'team-1',
-    referee: 'Marie Verhoeven',
+    refereeId: 'ref-6',
     leagueId: 'u12'
   }
 ];
@@ -69,10 +69,7 @@ export function getGameClosestToNow(): Game | undefined {
   return GAMES.reduce((closest, game) => {
     const gameTime = new Date(game.datetime).getTime();
     const closestTime = closest ? new Date(closest.datetime).getTime() : Infinity;
-    
-    // If the game is in the past, skip it
-    if (gameTime < nowTime) return closest;
-    
+
     // If this game is closer to now than the current closest, use it
     if (Math.abs(gameTime - nowTime) < Math.abs(closestTime - nowTime)) {
       return game;

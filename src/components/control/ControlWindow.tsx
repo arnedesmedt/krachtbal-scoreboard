@@ -43,11 +43,11 @@ export default function ControlWindow() {
   }
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+    <div className="h-screen w-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
       <div className="w-full h-full flex flex-col">
         
         {/* Top Navigation Bar */}
-        <nav className="bg-white shadow-lg border-b border-slate-200" style={{ height: 'clamp(60px, 8vh, 80px)' }}>
+        <nav className="bg-white/80 backdrop-blur-sm shadow-xl border-b border-white/20" style={{ height: 'clamp(60px, 8vh, 80px)' }}>
           <div className="h-full flex items-center justify-between px-6">
             {/* League and Phase */}
             <div className="flex items-center gap-6">
@@ -108,7 +108,7 @@ export default function ControlWindow() {
               <div className="hidden lg:grid lg:grid-cols-3 gap-4 h-full" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
                 
                 {/* Team A Panel */}
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
                   <ScorePanel team="A" />
                 </div>
 
@@ -122,7 +122,7 @@ export default function ControlWindow() {
                 </div>
 
                 {/* Team B Panel */}
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
                   <ScorePanel team="B" />
                 </div>
 
@@ -132,12 +132,12 @@ export default function ControlWindow() {
               <div className="lg:hidden grid grid-cols-2 grid-rows-2 gap-4 h-full" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
                 
                 {/* Top-left: Home Team Score */}
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
                   <ScorePanel team="A" />
                 </div>
 
                 {/* Top-right: Away Team Score */}
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
                   <ScorePanel team="B" />
                 </div>
 
