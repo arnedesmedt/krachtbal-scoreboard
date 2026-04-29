@@ -17,7 +17,7 @@ export default function ControlWindow() {
   const openSinglePresentationWindow = useGameStore((s) => s.openSinglePresentationWindow);
   const presentationTheme = useGameStore((s) => s.presentationTheme);
   const togglePresentationTheme = useGameStore((s) => s.togglePresentationTheme);
-  useBuzzer();
+  const { playBuzzer } = useBuzzer();
   useGameTimer();
 
   useEffect(() => {
@@ -41,22 +41,32 @@ export default function ControlWindow() {
               {phaseLabel(phase)}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => togglePresentationTheme()}
-            title={presentationTheme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
-            className="ml-2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
-          >
-            {presentationTheme === 'light' ? '☀️' : '🌙'}
-          </button>
-          <button
-            type="button"
-            onClick={() => openSinglePresentationWindow()}
-            title="Presentatiescherm openen"
-            className="ml-4 flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
-          >
-            🖥️ Scherm openen
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={playBuzzer}
+              title="Bel rinkelen"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              🔔 Bel
+            </button>
+            <button
+              type="button"
+              onClick={() => togglePresentationTheme()}
+              title={presentationTheme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
+            >
+              {presentationTheme === 'light' ? '☀️' : '🌙'}
+            </button>
+            <button
+              type="button"
+              onClick={() => openSinglePresentationWindow()}
+              title="Presentatiescherm openen"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
+            >
+              🖥️ Scherm openen
+            </button>
+          </div>
         </div>
 
         <HalfTimePanel />
