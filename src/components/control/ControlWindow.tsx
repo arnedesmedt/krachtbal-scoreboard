@@ -7,7 +7,6 @@ import { ConfigWindow } from '../config/ConfigWindow';
 import { ClockDisplay } from './ClockDisplay';
 import { ScorePanel } from './ScorePanel';
 import { RestMinutePanel } from './RestMinutePanel';
-import { EndGamePanel } from './EndGamePanel';
 import { InitiatorPopup } from './InitiatorPopup';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
@@ -125,11 +124,7 @@ export default function ControlWindow() {
 
         {/* Main Content Grid */}
         <main className="flex-1 p-6 overflow-auto" style={{ paddingTop: 'clamp(1rem, 2vh, 2rem)' }}>
-          <div className="h-full grid grid-rows-[auto_1fr] gap-6" style={{ gap: 'clamp(1rem, 2vh, 2rem)' }}>
-            
-            {/* End Game Panel - shows when game ends */}
-            <EndGamePanel />
-            
+          <div className="h-full">
             {/* Score and Clock Section */}
             <div className="flex-1 overflow-visible">
               {/* Desktop Layout - 3 columns */}
