@@ -55,6 +55,7 @@ export default function PresentationWindow() {
 
   const theme = state.presentationTheme ?? 'light';
 
+  
   useEffect(() => {
     if (isTauri) {
       let unlistenUpdate: (() => void) | undefined;
@@ -93,6 +94,7 @@ export default function PresentationWindow() {
 
   const hasRestMinute = !!state.restMinute;
 
+  
   return (
     <div
       className={`h-screen flex flex-col p-8 overflow-hidden ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}
@@ -116,13 +118,14 @@ export default function PresentationWindow() {
         </button>
       )}
       <ScoreBoard payload={state} theme={theme} />
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center relative">
         {hasRestMinute ? (
           <RestMinuteDisplay payload={state} theme={theme} />
         ) : (
           <TimerDisplay payload={state} theme={theme} />
         )}
+        
+              </div>
       </div>
-    </div>
   );
 }
