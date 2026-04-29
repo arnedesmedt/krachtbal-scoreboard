@@ -90,6 +90,7 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
           (() => {
             const isScoreEqual = scoreA === scoreB;
             const hasPlayedThirdHalf = halvesPlayed.includes('THIRD_HALF');
+            const hasPlayedFourthHalf = halvesPlayed.includes('FOURTH_HALF');
             
             if (isScoreEqual && !hasPlayedThirdHalf) {
               return (
@@ -103,8 +104,8 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
                   ⚽ Start 3e helft (5 min)
                 </button>
               );
-            } else if (hasPlayedThirdHalf) {
-              // 4th half always appears if 3rd half was played, regardless of score
+            } else if (hasPlayedThirdHalf && !hasPlayedFourthHalf) {
+              // 4th half appears if 3rd half was played but 4th half hasn't been played yet
               return (
                 <button
                   type="button"
@@ -117,6 +118,9 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
                 </button>
               );
             } else {
+              // Show nieuwe wedstrijd button when: 
+              // - No 3rd half was played and scores are not equal, OR
+              // - Both 3rd and 4th halves have been played
               return (
                 <button
                   type="button"
