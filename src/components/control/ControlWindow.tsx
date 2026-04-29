@@ -27,7 +27,10 @@ export default function ControlWindow() {
   const resetCurrentHalf = useGameStore((s) => s.resetCurrentHalf);
   useGameTimer();
 
-  const half = phase === 'FIRST_HALF' || phase === 'SECOND_HALF' ? phase : 'FIRST_HALF';
+  const half: 'FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' = 
+    phase === 'FIRST_HALF' || phase === 'SECOND_HALF' || phase === 'THIRD_HALF' || phase === 'FOURTH_HALF' 
+      ? phase 
+      : 'FIRST_HALF';
   const aUsedThisHalf = restMinutesUsedA[half];
   const bUsedThisHalf = restMinutesUsedB[half];
   const showPopup = restMinute !== null && restMinute.initiatorTeam === null;

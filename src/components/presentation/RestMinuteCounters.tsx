@@ -6,13 +6,16 @@ interface RestMinuteCountersProps {
 }
 
 export function RestMinuteCounters({ payload, theme = 'light' }: RestMinuteCountersProps) {
-  const half = payload.phase === 'FIRST_HALF' || payload.phase === 'SECOND_HALF' ? payload.phase : 'FIRST_HALF';
+  const half: 'FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' = 
+    payload.phase === 'FIRST_HALF' || payload.phase === 'SECOND_HALF' || payload.phase === 'THIRD_HALF' || payload.phase === 'FOURTH_HALF' 
+      ? payload.phase 
+      : 'FIRST_HALF';
   const aThisHalf = payload.restMinutesUsedA[half];
   const bThisHalf = payload.restMinutesUsedB[half];
   const refThisHalf = payload.restMinutesUsedReferee[half];
-  const aTotal = payload.restMinutesUsedA.FIRST_HALF + payload.restMinutesUsedA.SECOND_HALF;
-  const bTotal = payload.restMinutesUsedB.FIRST_HALF + payload.restMinutesUsedB.SECOND_HALF;
-  const refTotal = payload.restMinutesUsedReferee.FIRST_HALF + payload.restMinutesUsedReferee.SECOND_HALF;
+  const aTotal = payload.restMinutesUsedA.FIRST_HALF + payload.restMinutesUsedA.SECOND_HALF + payload.restMinutesUsedA.THIRD_HALF + payload.restMinutesUsedA.FOURTH_HALF;
+  const bTotal = payload.restMinutesUsedB.FIRST_HALF + payload.restMinutesUsedB.SECOND_HALF + payload.restMinutesUsedB.THIRD_HALF + payload.restMinutesUsedB.FOURTH_HALF;
+  const refTotal = payload.restMinutesUsedReferee.FIRST_HALF + payload.restMinutesUsedReferee.SECOND_HALF + payload.restMinutesUsedReferee.THIRD_HALF + payload.restMinutesUsedReferee.FOURTH_HALF;
 
   return (
     <div
