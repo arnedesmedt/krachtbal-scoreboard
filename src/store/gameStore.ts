@@ -56,6 +56,10 @@ const initialState: GameState = {
   restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
   restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
   presentationTheme: 'light',
+  // Timing persistence fields
+  halfStartTimeMs: null,
+  restMinuteStartTimeMs: null,
+  lastSavedTimeMs: null,
 };
 
 function buildPayload(state: GameState): GameStateUpdatePayload {
@@ -115,32 +119,80 @@ interface GameActions {
 // Persistence functions
 const saveGameState = (state: GameState) => {
   try {
+    // Check if localStorage is available
+    if (typeof window === 'undefined' || !window.localStorage) {
+      console.log('localStorage not available, skipping save');
+      return;
+    }
+    
     const stateToSave = {
       ...state,
       // Don't save setup phase - only save active games
       phase: state.phase === 'SETUP' ? 'SETUP' : state.phase,
       timestamp: Date.now()
     };
+    console.log('Saving game state:', stateToSave);
     localStorage.setItem('krachtbal-game-state', JSON.stringify(stateToSave));
+    console.log('Game state saved successfully');
   } catch (error) {
     console.error('Failed to save game state:', error);
   }
 };
 
+const calculateElapsedTime = (state: Partial<GameState>): Partial<GameState> => {
+  const now = Date.now();
+  const updatedState = { ...state };
+  
+  // Calculate elapsed time for game clock
+  if (state.clockRunning && state.halfStartTimeMs && state.lastSavedTimeMs) {
+    const elapsedSinceSave = now - state.lastSavedTimeMs;
+    updatedState.playedTimeMs = (state.playedTimeMs || 0) + elapsedSinceSave;
+    updatedState.lastSavedTimeMs = now;
+    console.log(`Restored clock: added ${elapsedSinceSave}ms to played time`);
+  }
+  
+  // Calculate elapsed time for rest minute
+  if (state.restMinute && state.restMinuteStartTimeMs && state.lastSavedTimeMs) {
+    const elapsedSinceSave = now - state.lastSavedTimeMs;
+    const newRemainingMs = Math.max(0, state.restMinute.remainingMs - elapsedSinceSave);
+    updatedState.restMinute = {
+      ...state.restMinute,
+      remainingMs: newRemainingMs
+    };
+    updatedState.lastSavedTimeMs = now;
+    console.log(`Restored rest minute: subtracted ${elapsedSinceSave}ms from remaining time`);
+  }
+  
+  return updatedState;
+};
+
 const loadGameState = (): Partial<GameState> | null => {
   try {
+    // Check if localStorage is available
+    if (typeof window === 'undefined' || !window.localStorage) {
+      console.log('localStorage not available, skipping load');
+      return null;
+    }
+    
     const saved = localStorage.getItem('krachtbal-game-state');
+    console.log('Loading game state, found:', saved ? 'data' : 'no data');
     if (!saved) return null;
     
     const parsed = JSON.parse(saved);
+    console.log('Parsed game state:', parsed);
     // Only restore if it's not too old (e.g., within 24 hours)
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     if (Date.now() - parsed.timestamp > maxAge) {
+      console.log('Game state too old, removing');
       localStorage.removeItem('krachtbal-game-state');
       return null;
     }
     
-    return parsed;
+    // Calculate elapsed time since last save
+    const stateWithElapsed = calculateElapsedTime(parsed);
+    
+    console.log('Game state loaded successfully with elapsed time calculated');
+    return stateWithElapsed;
   } catch (error) {
     console.error('Failed to load game state:', error);
     return null;
@@ -160,7 +212,9 @@ type GameStore = GameState & GameActions;
 export const useGameStore = create<GameStore>((set, get) => {
   // Try to load saved state on initialization
   const savedState = loadGameState();
+  console.log('Store initialization - saved state:', savedState);
   const initialStateWithSaved = savedState ? { ...initialState, ...savedState } : initialState;
+  console.log('Store initialization - initial state with saved:', initialStateWithSaved);
   
   return {
     ...initialStateWithSaved,
@@ -177,7 +231,13 @@ export const useGameStore = create<GameStore>((set, get) => {
     const { config } = state;
     if (!config) return;
     if (!config.teamA?.name || !config.teamB?.name || !config.referee) return;
-    const newState = { phase: 'FIRST_HALF', clockRunning: false };
+    const now = Date.now();
+    const newState = { 
+      phase: 'FIRST_HALF' as const, 
+      clockRunning: false,
+      halfStartTimeMs: now,
+      lastSavedTimeMs: now
+    };
     set(newState);
     saveGameState({ ...get(), ...newState });
     safeEmit('game-state-update', buildPayload(get()));
@@ -201,7 +261,25 @@ export const useGameStore = create<GameStore>((set, get) => {
   toggleClock() {
     const state = get();
     if (!isActiveHalf(state.phase)) return;
-    set({ clockRunning: !state.clockRunning });
+    const now = Date.now();
+    const isStarting = !state.clockRunning;
+    
+    if (isStarting) {
+      // Starting the clock - set the start time if not already set
+      set({ 
+        clockRunning: true,
+        halfStartTimeMs: state.halfStartTimeMs || now,
+        lastSavedTimeMs: now
+      });
+    } else {
+      // Stopping the clock - update the last saved time
+      set({ 
+        clockRunning: false,
+        lastSavedTimeMs: now
+      });
+    }
+    
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -249,8 +327,11 @@ export const useGameStore = create<GameStore>((set, get) => {
     const state = get();
     if (!state.restMinute) return;
     const half = state.phase as 'FIRST_HALF' | 'SECOND_HALF';
+    const now = Date.now();
     set({
       restMinute: { ...state.restMinute, initiatorTeam: initiator },
+      restMinuteStartTimeMs: now,
+      lastSavedTimeMs: now,
       restMinutesUsedA: initiator === 'A'
         ? { ...state.restMinutesUsedA, [half]: state.restMinutesUsedA[half] + 1 }
         : state.restMinutesUsedA,
@@ -277,13 +358,22 @@ export const useGameStore = create<GameStore>((set, get) => {
     const state = get();
     if (!state.restMinute) return;
     const remaining = state.restMinute.remainingMs - deltaMs;
+    const now = Date.now();
+    
     if (remaining <= 0) {
       get().clearRestMinute();
     } else {
       // Fire 5-second buzzer once — trigger slightly early to compensate for audio output latency
       const crossed5s = !state.restMinute.buzzerFired5s && remaining <= 5_150;
       if (crossed5s) playBuzzer();
-      set({ restMinute: { ...state.restMinute, remainingMs: remaining, buzzerFired5s: state.restMinute.buzzerFired5s || crossed5s } });
+      set({ 
+        restMinute: { 
+          ...state.restMinute, 
+          remainingMs: remaining, 
+          buzzerFired5s: state.restMinute.buzzerFired5s || crossed5s 
+        },
+        lastSavedTimeMs: now
+      });
       safeEmit('game-state-update', buildPayload(get()));
     }
   },
@@ -316,15 +406,30 @@ export const useGameStore = create<GameStore>((set, get) => {
       playBuzzer();
     }
     if (newTime >= halfTimeLengthMs && halfTimeLengthMs > 0) {
+      const now = Date.now();
       if (state.phase === 'FIRST_HALF') {
         playBuzzer();
-        set({ playedTimeMs: halfTimeLengthMs, clockRunning: false, phase: 'HALF_TIME' });
+        set({ 
+          playedTimeMs: halfTimeLengthMs, 
+          clockRunning: false, 
+          phase: 'HALF_TIME',
+          lastSavedTimeMs: now
+        });
       } else if (state.phase === 'SECOND_HALF') {
         playBuzzer();
-        set({ playedTimeMs: halfTimeLengthMs, clockRunning: false, phase: 'ENDED' });
+        set({ 
+          playedTimeMs: halfTimeLengthMs, 
+          clockRunning: false, 
+          phase: 'ENDED',
+          lastSavedTimeMs: now
+        });
       }
     } else {
-      set({ playedTimeMs: newTime });
+      const now = Date.now();
+      set({ 
+        playedTimeMs: newTime,
+        lastSavedTimeMs: now
+      });
     }
     saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
@@ -332,7 +437,14 @@ export const useGameStore = create<GameStore>((set, get) => {
 
   startSecondHalf() {
     if (get().phase !== 'HALF_TIME') return;
-    set({ phase: 'SECOND_HALF', playedTimeMs: 0, clockRunning: false });
+    const now = Date.now();
+    set({ 
+      phase: 'SECOND_HALF', 
+      playedTimeMs: 0, 
+      clockRunning: false,
+      halfStartTimeMs: now,
+      lastSavedTimeMs: now
+    });
     saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
@@ -358,5 +470,5 @@ export const useGameStore = create<GameStore>((set, get) => {
     clearGameState(); // Clear saved state when game is abandoned
     safeEmit('game-state-update', buildPayload(get()));
   },
-}));
-
+  };
+});

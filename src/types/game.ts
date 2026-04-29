@@ -43,6 +43,10 @@ export interface GameState {
   restMinutesUsedB: RestMinutesPerHalf;
   restMinutesUsedReferee: RestMinutesPerHalf;
   presentationTheme: PresentationTheme;
+  // Timing persistence fields
+  halfStartTimeMs: number | null; // When the current half started
+  restMinuteStartTimeMs: number | null; // When the current rest minute started
+  lastSavedTimeMs: number | null; // When the state was last saved (for calculating elapsed time)
 }
 
 export type GameStateUpdatePayload = {
