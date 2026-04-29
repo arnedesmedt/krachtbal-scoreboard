@@ -9,6 +9,7 @@ export interface TeamConfig {
 }
 
 export interface GameConfig {
+  gameId: string;
   teamA: TeamConfig;
   teamB: TeamConfig;
   referee: string;
