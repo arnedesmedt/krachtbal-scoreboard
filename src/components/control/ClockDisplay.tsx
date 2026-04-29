@@ -13,10 +13,15 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
   const phase = useGameStore((s) => s.phase);
   const toggleClock = useGameStore((s) => s.toggleClock);
   const startSecondHalf = useGameStore((s) => s.startSecondHalf);
+  const startThirdHalf = useGameStore((s) => s.startThirdHalf);
+  const startFourthHalf = useGameStore((s) => s.startFourthHalf);
   const config = useGameStore((s) => s.config);
   const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
   const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
   const restMinutesUsedReferee = useGameStore((s) => s.restMinutesUsedReferee);
+  const scoreA = useGameStore((s) => s.scoreA);
+  const scoreB = useGameStore((s) => s.scoreB);
+  const halvesPlayed = useGameStore((s) => s.halvesPlayed);
 
   const isActiveHalf = phase === 'FIRST_HALF' || phase === 'SECOND_HALF';
   const half: 'FIRST_HALF' | 'SECOND_HALF' = phase === 'SECOND_HALF' ? 'SECOND_HALF' : 'FIRST_HALF';
@@ -71,15 +76,48 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
             ⚡ Start tweede helft
           </button>
         ) : phase === 'ENDED' ? (
-          <button
-            type="button"
-            onClick={onQuitClick}
-            aria-label="Nieuwe wedstrijd starten"
-            className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
-            style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
-          >
-            🏁 Nieuwe wedstrijd
-          </button>
+          (() => {
+            const isScoreEqual = scoreA === scoreB;
+            const hasPlayedThirdHalf = halvesPlayed.includes('THIRD_HALF');
+            
+            if (isScoreEqual && !hasPlayedThirdHalf) {
+              return (
+                <button
+                  type="button"
+                  onClick={startThirdHalf}
+                  aria-label="Start derde helft"
+                  className="px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                  style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+                >
+                  ⚽ Start 3e helft (5 min)
+                </button>
+              );
+            } else if (isScoreEqual && hasPlayedThirdHalf) {
+              return (
+                <button
+                  type="button"
+                  onClick={startFourthHalf}
+                  aria-label="Start vierde helft"
+                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                  style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+                >
+                  ⚽ Start 4e helft (5 min)
+                </button>
+              );
+            } else {
+              return (
+                <button
+                  type="button"
+                  onClick={onQuitClick}
+                  aria-label="Nieuwe wedstrijd starten"
+                  className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                  style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+                >
+                  🏁 Nieuwe wedstrijd
+                </button>
+              );
+            }
+          })()
         ) : (
           <div className="flex gap-2">
             {clockRunning ? (

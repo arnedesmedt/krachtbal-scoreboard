@@ -205,6 +205,11 @@ const loadGameState = (): Partial<GameState> | null => {
     // Calculate elapsed time since last save
     const stateWithElapsed = calculateElapsedTime(parsed);
     
+    // Ensure halvesPlayed field exists (for backward compatibility)
+    if (!stateWithElapsed.halvesPlayed) {
+      stateWithElapsed.halvesPlayed = [];
+    }
+    
     console.log('Game state loaded successfully with elapsed time calculated');
     return stateWithElapsed;
   } catch (error) {
@@ -229,6 +234,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   console.log('Store initialization - saved state:', savedState);
   const initialStateWithSaved = savedState ? { ...initialState, ...savedState } : initialState;
   console.log('Store initialization - initial state with saved:', initialStateWithSaved);
+  console.log('Store initialization - halvesPlayed:', initialStateWithSaved.halvesPlayed);
   
   return {
     ...initialStateWithSaved,
