@@ -124,7 +124,7 @@ export default function PresentationWindow() {
         ) : (
           <TimerDisplay payload={state} theme={theme} />
         )}
-</div>
       </div>
+    </div>
   );
 }
