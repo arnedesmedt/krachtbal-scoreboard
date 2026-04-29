@@ -44,14 +44,18 @@ export function ScorePanel({ team }: ScorePanelProps) {
   const teamColor = team === 'A' ? config?.teamA.color : config?.teamB.color;
 
   const handleAddPenalty = () => {
+    console.log('handleAddPenalty called:', { team, penalties, thirdPenaltyConfirmed });
     if (thirdPenaltyConfirmed) {
-      // Reset penalties from 3 to 1
+      // Reset penalties from 3 to 0
+      console.log('Resetting penalties');
       resetPenalties();
     } else if (penalties >= 2) {
       // Show confirmation for 3rd penalty
+      console.log('Showing confirmation for 3rd penalty');
       setShowPenaltyConfirm(true);
     } else {
       // Add penalty directly for 1st and 2nd penalties
+      console.log('Adding penalty directly');
       addTeamPenalty(team);
     }
   };
@@ -61,6 +65,11 @@ export function ScorePanel({ team }: ScorePanelProps) {
     playBuzzer(); // Ring bell for 3rd penalty
     setThirdPenaltyConfirmed(true);
     setShowPenaltyConfirm(false);
+  };
+
+  const handleAdjustScore = (delta: number) => {
+    console.log('handleAdjustScore called:', { team, delta, score });
+    adjustScore(team, delta);
   };
 
   const resetPenalties = () => {
@@ -104,7 +113,7 @@ export function ScorePanel({ team }: ScorePanelProps) {
             <div className="flex gap-2 justify-center">
               <button
                 type="button"
-                onClick={() => adjustScore(team, -1)}
+                onClick={() => handleAdjustScore(-1)}
                 disabled={score <= 0}
                 aria-label={`Score verlagen Team ${team}`}
                 className="flex-1 px-3 py-3 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 disabled:from-slate-50 disabled:to-slate-100 disabled:opacity-50 rounded-xl font-bold text-slate-700 transition-colors duration-200 shadow-md"
@@ -114,7 +123,7 @@ export function ScorePanel({ team }: ScorePanelProps) {
               </button>
               <button
                 type="button"
-                onClick={() => adjustScore(team, 1)}
+                onClick={() => handleAdjustScore(1)}
                 aria-label={`Score verhogen Team ${team}`}
                 className="flex-1 px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
                 style={{ fontSize: 'clamp(0.75rem, 1.5vw, 1rem)' }}

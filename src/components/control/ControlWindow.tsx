@@ -7,8 +7,6 @@ import { ConfigWindow } from '../config/ConfigWindow';
 import { ClockDisplay } from './ClockDisplay';
 import { ScorePanel } from './ScorePanel';
 import { RestMinutePanel } from './RestMinutePanel';
-import { HalfTimePanel } from './HalfTimePanel';
-import { EndGamePanel } from './EndGamePanel';
 import { InitiatorPopup } from './InitiatorPopup';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
 
@@ -25,14 +23,16 @@ export default function ControlWindow() {
   const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
   const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
   const config = useGameStore((s) => s.config);
-  const abandonGame = useGameStore((s) => s.abandonGame);
+  const resetCurrentHalf = useGameStore((s) => s.resetCurrentHalf);
   useGameTimer();
 
   const half = phase === 'FIRST_HALF' || phase === 'SECOND_HALF' ? phase : 'FIRST_HALF';
   const aUsedThisHalf = restMinutesUsedA[half];
   const bUsedThisHalf = restMinutesUsedB[half];
   const showPopup = restMinute !== null && restMinute.initiatorTeam === null;
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const abandonGame = useGameStore((s) => s.abandonGame);
 
   useEffect(() => {
     setupSyncListener().catch(console.error);
@@ -101,22 +101,7 @@ export default function ControlWindow() {
         <main className="flex-1 p-6 overflow-auto" style={{ paddingTop: 'clamp(1rem, 2vh, 2rem)' }}>
           <div className="h-full grid grid-rows-[auto_1fr] gap-6" style={{ gap: 'clamp(1rem, 2vh, 2rem)' }}>
             
-            {/* Control Panels Row - Only show when panels are active */}
-            {(phase === 'HALF_TIME' || phase === 'ENDED') && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
-                {phase === 'HALF_TIME' && (
-                  <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
-                    <HalfTimePanel />
-                  </div>
-                )}
-                {phase === 'ENDED' && (
-                  <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
-                    <EndGamePanel />
-                  </div>
-                )}
-              </div>
-            )}
-
+            
             {/* Score and Clock Section */}
             <div className="flex-1 overflow-visible">
               {/* Desktop Layout - 3 columns */}
@@ -130,8 +115,8 @@ export default function ControlWindow() {
                 {/* Center Clock */}
                 <div className="flex flex-col items-center justify-center" style={{ gap: 'clamp(1rem, 2vh, 2rem)' }}>
                   <ClockDisplay 
-                    showQuitConfirm={showQuitConfirm} 
-                    setShowQuitConfirm={setShowQuitConfirm} 
+                    onResetClick={() => setShowResetConfirm(true)} 
+                    onQuitClick={() => setShowQuitConfirm(true)} 
                   />
                   <RestMinutePanel />
                 </div>
@@ -159,8 +144,8 @@ export default function ControlWindow() {
                 {/* Bottom-left: Stop Match */}
                 <div className="flex flex-col items-center justify-center">
                   <ClockDisplay 
-                    showQuitConfirm={showQuitConfirm} 
-                    setShowQuitConfirm={setShowQuitConfirm} 
+                    onResetClick={() => setShowResetConfirm(true)} 
+                    onQuitClick={() => setShowQuitConfirm(true)} 
                   />
                 </div>
 
@@ -188,15 +173,55 @@ export default function ControlWindow() {
       />
     )}
 
+    {/* Reset Confirmation Dialog */}
+    {showResetConfirm && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900">Helft resetten?</h3>
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <p className="text-gray-600 mb-6">
+            Weet je zeker dat je de huidige helft wilt resetten? De tijd wordt teruggezet naar 0:00 en de klok wordt gestopt.
+          </p>
+          
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(false)}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetCurrentHalf();
+                setShowResetConfirm(false);
+              }}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-colors"
+            >
+              Ja, resetten
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Quit Confirmation Dialog */}
     {showQuitConfirm && (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 border border-slate-200/50 max-h-screen overflow-auto">
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">Wedstrijd stoppen?</h3>
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Wedstrijd stoppen?</h2>
             <p className="text-slate-600 mb-6">De wedstrijd wordt gestopt en je keert terug naar het configuratiescherm.</p>
             <div className="flex gap-3">
               <button
@@ -221,6 +246,7 @@ export default function ControlWindow() {
         </div>
       </div>
     )}
-  </div>
+
+      </div>
   );
 }

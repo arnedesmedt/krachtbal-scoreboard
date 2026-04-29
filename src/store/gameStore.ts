@@ -106,6 +106,7 @@ interface GameActions {
   adjustScore: (team: 'A' | 'B', delta: number) => void;
   addTeamPenalty: (team: 'A' | 'B') => void;
   setPenalties: (team: 'A' | 'B', count: number) => void;
+  resetCurrentHalf: () => void;
   startRestMinute: () => void;
   assignRestMinute: (initiator: RestMinuteInitiator) => void;
   cancelRestMinute: () => void;
@@ -286,16 +287,22 @@ export const useGameStore = create<GameStore>((set, get) => {
 
   adjustScore(team, delta) {
     const state = get();
-    // Allow score changes during active halves (including during rest minutes)
-    // Prevent during SETUP, HALF_TIME, and ENDED phases
-    if (!isActiveHalf(state.phase)) return;
+    console.log('adjustScore called:', { team, delta, phase: state.phase, restMinute: state.restMinute });
+    // Allow score changes during active halves, half-time, during rest minutes, and after game ends
+    // Prevent during SETUP phase only
+    if (state.phase === 'SETUP') {
+      console.log('adjustScore blocked: not allowed phase');
+      return;
+    }
     if (team === 'A') {
       const newScore = state.scoreA + delta;
       if (newScore < 0) return;
+      console.log('adjustScore setting scoreA:', newScore);
       set({ scoreA: newScore });
     } else {
       const newScore = state.scoreB + delta;
       if (newScore < 0) return;
+      console.log('adjustScore setting scoreB:', newScore);
       set({ scoreB: newScore });
     }
     saveGameState(get());
@@ -304,14 +311,23 @@ export const useGameStore = create<GameStore>((set, get) => {
 
   addTeamPenalty(team) {
     const state = get();
-    if (!isActiveHalf(state.phase)) return;
+    console.log('addTeamPenalty called:', { team, phase: state.phase, restMinute: state.restMinute });
+    // Allow penalty changes during active halves, half-time, during rest minutes, and after game ends
+    // Prevent during SETUP phase only
+    if (state.phase === 'SETUP') {
+      console.log('addTeamPenalty blocked: not allowed phase');
+      return;
+    }
     if (team === 'A') {
       const next = (state.penaltiesA + 1) % 4; // 0→1→2→3→0
+      console.log('addTeamPenalty setting penaltiesA:', next);
       set({ penaltiesA: next });
     } else {
       const next = (state.penaltiesB + 1) % 4;
+      console.log('addTeamPenalty setting penaltiesB:', next);
       set({ penaltiesB: next });
     }
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -323,6 +339,23 @@ export const useGameStore = create<GameStore>((set, get) => {
     } else {
       set({ penaltiesB: Math.max(0, Math.min(3, count)) });
     }
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  resetCurrentHalf() {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    
+    const now = Date.now();
+    set({
+      playedTimeMs: 0,
+      clockRunning: false,
+      halfStartTimeMs: now,
+      lastSavedTimeMs: now,
+      restMinute: null
+    });
+    
     saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
@@ -456,7 +489,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     set({ 
       phase: 'SECOND_HALF', 
       playedTimeMs: 0, 
-      clockRunning: false,
+      clockRunning: true,
       halfStartTimeMs: now,
       lastSavedTimeMs: now
     });

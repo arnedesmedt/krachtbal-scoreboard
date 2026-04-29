@@ -1,17 +1,18 @@
-import { useState } from 'react';
 import { formatMs } from '../../utils/formatTime';
 import { useGameStore } from '../../store/gameStore';
 
 interface ClockDisplayProps {
-  showQuitConfirm?: boolean;
-  setShowQuitConfirm?: (show: boolean) => void;
+  onResetClick?: () => void;
+  onQuitClick?: () => void;
 }
 
-export function ClockDisplay({ showQuitConfirm = false, setShowQuitConfirm }: ClockDisplayProps) {
+export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
+  
   const playedTimeMs = useGameStore((s) => s.playedTimeMs);
   const clockRunning = useGameStore((s) => s.clockRunning);
   const phase = useGameStore((s) => s.phase);
   const toggleClock = useGameStore((s) => s.toggleClock);
+  const startSecondHalf = useGameStore((s) => s.startSecondHalf);
   const config = useGameStore((s) => s.config);
   const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
   const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
@@ -59,28 +60,63 @@ export function ClockDisplay({ showQuitConfirm = false, setShowQuitConfirm }: Cl
 
       {/* Control Button */}
       <div className="mt-4">
-        {clockRunning ? (
+        {phase === 'HALF_TIME' ? (
           <button
             type="button"
-            onClick={() => setShowQuitConfirm?.(true)}
-            disabled={!isActiveHalf}
-            aria-label="Spel stoppen"
-            className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:from-slate-400 disabled:to-slate-500 disabled:opacity-50"
+            onClick={startSecondHalf}
+            aria-label="Tweede helft starten"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
             style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
           >
-            ⏹ Stop
+            ⚡ Start tweede helft
+          </button>
+        ) : phase === 'ENDED' ? (
+          <button
+            type="button"
+            onClick={onQuitClick}
+            aria-label="Nieuwe wedstrijd starten"
+            className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+            style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+          >
+            🏁 Nieuwe wedstrijd
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={toggleClock}
-            disabled={!isActiveHalf}
-            aria-label="Klok starten"
-            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:from-slate-400 disabled:to-slate-500 disabled:opacity-50"
-            style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
-          >
-            ▶ Start
-          </button>
+          <div className="flex gap-2">
+            {clockRunning ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onResetClick}
+                  aria-label="Helft resetten"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                  style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
+                >
+                  🔄 Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={onQuitClick}
+                  disabled={!isActiveHalf}
+                  aria-label="Spel stoppen"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:from-slate-400 disabled:to-slate-500 disabled:opacity-50"
+                  style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
+                >
+                  ⏹ Stop
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={toggleClock}
+                disabled={!isActiveHalf}
+                aria-label="Klok starten"
+                className="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:from-slate-400 disabled:to-slate-500 disabled:opacity-50"
+                style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+              >
+                ▶ Start
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
