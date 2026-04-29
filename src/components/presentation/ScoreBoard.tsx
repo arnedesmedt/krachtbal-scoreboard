@@ -24,11 +24,7 @@ function RestMinuteIcons({ currentHalf, theme = 'light' }: { currentHalf: number
   const takenColor = '#3b82f6'; // blue-500
   const emptyColor = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
   const MAX_PER_HALF = 2;
-<<<<<<< HEAD
-  const iconSize = '3.5vw';
-=======
-  const iconSize = '1.4vw';
->>>>>>> feature/rest-minute-countdown-position
+const iconSize = '3.5vw';
   return (
     <div className="flex gap-[0.4vw] justify-center items-center mt-[0.6vh]">
       {Array.from({ length: MAX_PER_HALF }).map((_, i) => (
