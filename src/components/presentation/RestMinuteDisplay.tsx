@@ -3,9 +3,10 @@ import type { GameStateUpdatePayload } from '../../types/game';
 
 interface RestMinuteDisplayProps {
   payload: GameStateUpdatePayload;
+  theme?: 'light' | 'dark';
 }
 
-export function RestMinuteDisplay({ payload }: RestMinuteDisplayProps) {
+export function RestMinuteDisplay({ payload, theme = 'light' }: RestMinuteDisplayProps) {
   if (!payload.restMinute) return null;
 
   const { initiatorTeam } = payload.restMinute;
@@ -19,12 +20,28 @@ export function RestMinuteDisplay({ payload }: RestMinuteDisplayProps) {
       : '';
 
   return (
-    <div className="bg-orange-500 rounded-2xl text-center" style={{ padding: '2vh 4vw' }}>
-      <div className="font-bold text-white uppercase tracking-wide" style={{ fontSize: '3vw', marginBottom: '1vh' }}>
-        RUSTMINUUT{teamLabel}
+    <div className="flex flex-col items-center gap-[2vh]">
+      {/* Rest minute countdown */}
+      <div className="bg-orange-500 rounded-2xl text-center" style={{ padding: '1.5vh 3vw' }}>
+        <div className="font-bold text-white uppercase tracking-wide" style={{ fontSize: '2.5vw', marginBottom: '0.5vh' }}>
+          RUSTMINUUT{teamLabel}
+        </div>
+        <div className="font-mono font-black text-white" style={{ fontSize: '6vw' }}>
+          {formatMs(payload.restMinute.remainingMs)}
+        </div>
       </div>
-      <div className="font-mono font-black text-white" style={{ fontSize: '8vw' }}>
-        {formatMs(payload.restMinute.remainingMs)}
+      
+      {/* Total time */}
+      <div className="text-center">
+        <div className="font-bold uppercase tracking-wide text-gray-500" style={{ fontSize: '1.5vw', marginBottom: '0.5vh' }}>
+          TOTALE TIJD
+        </div>
+        <div
+          className={`font-mono font-black tracking-widest leading-none ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+          style={{ fontSize: '4vw' }}
+        >
+          {formatMs(payload.playedTimeMs)}
+        </div>
       </div>
     </div>
   );

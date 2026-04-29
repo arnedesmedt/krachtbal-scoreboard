@@ -118,7 +118,7 @@ export default function PresentationWindow() {
       <ScoreBoard payload={state} theme={theme} />
       <div className="flex-1 flex items-center justify-center">
         {hasRestMinute ? (
-          <RestMinuteDisplay payload={state} />
+          <RestMinuteDisplay payload={state} theme={theme} />
         ) : (
           <TimerDisplay payload={state} theme={theme} />
         )}
