@@ -20,38 +20,24 @@ function PenaltyXs({ count, size, theme = 'light' }: { count: number; size: stri
   );
 }
 
-function RestMinuteIcons({ firstHalf, secondHalf, theme = 'light' }: { firstHalf: number; secondHalf: number; theme?: 'light' | 'dark' }) {
-  const takenColor = '#22c55e'; // green-500
+function RestMinuteIcons({ currentHalf, theme = 'light' }: { currentHalf: number; theme?: 'light' | 'dark' }) {
+  const takenColor = '#3b82f6'; // blue-500
   const emptyColor = theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
-  const dividerColor = theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)';
   const MAX_PER_HALF = 2;
-  const dotSize = '1.4vw';
+  const iconSize = '3.5vw';
   return (
     <div className="flex gap-[0.4vw] justify-center items-center mt-[0.6vh]">
       {Array.from({ length: MAX_PER_HALF }).map((_, i) => (
         <span
-          key={`f${i}`}
+          key={`timer${i}`}
           style={{
-            display: 'inline-block',
-            width: dotSize,
-            height: dotSize,
-            borderRadius: '50%',
-            backgroundColor: i < firstHalf ? takenColor : emptyColor,
+            fontSize: iconSize,
+            color: i < currentHalf ? takenColor : emptyColor,
+            lineHeight: 1,
           }}
-        />
-      ))}
-      <span style={{ fontSize: '1.6vw', color: dividerColor, margin: '0 0.3vw', lineHeight: 1 }}>|</span>
-      {Array.from({ length: MAX_PER_HALF }).map((_, i) => (
-        <span
-          key={`s${i}`}
-          style={{
-            display: 'inline-block',
-            width: dotSize,
-            height: dotSize,
-            borderRadius: '50%',
-            backgroundColor: i < secondHalf ? takenColor : emptyColor,
-          }}
-        />
+        >
+          ⏱️
+        </span>
       ))}
     </div>
   );
@@ -90,14 +76,14 @@ export function ScoreBoard({ payload, theme = 'light' }: ScoreBoardProps) {
         {/* Row 2: penalty X's + referee centered under vs */}
         <div className="flex flex-col items-center">
           <PenaltyXs count={payload.penaltiesA} size="3vw" theme={theme} />
-          <RestMinuteIcons firstHalf={payload.restMinutesUsedA.FIRST_HALF} secondHalf={payload.restMinutesUsedA.SECOND_HALF} theme={theme} />
+          <RestMinuteIcons currentHalf={payload.phase === 'SECOND_HALF' ? payload.restMinutesUsedA.SECOND_HALF : payload.restMinutesUsedA.FIRST_HALF} theme={theme} />
         </div>
         <div className={`flex flex-col items-center justify-center ${textMuted}`} style={{ fontSize: '1.5vw', padding: '0 1vw' }}>
           {payload.referee ? <span>{`Scheidsrechter: ${payload.referee}`}</span> : ''}
         </div>
         <div className="flex flex-col items-center">
           <PenaltyXs count={payload.penaltiesB} size="3vw" theme={theme} />
-          <RestMinuteIcons firstHalf={payload.restMinutesUsedB.FIRST_HALF} secondHalf={payload.restMinutesUsedB.SECOND_HALF} theme={theme} />
+          <RestMinuteIcons currentHalf={payload.phase === 'SECOND_HALF' ? payload.restMinutesUsedB.SECOND_HALF : payload.restMinutesUsedB.FIRST_HALF} theme={theme} />
         </div>
       </div>
       <div className="flex items-center justify-center leading-none" style={{ fontSize: '14vw', gap: '2vw' }}>
