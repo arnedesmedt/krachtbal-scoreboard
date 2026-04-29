@@ -258,8 +258,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const halfTimeLengthMs = baseHalfMs + totalRestMs;
     const newTime = state.playedTimeMs + deltaMs;
     // Fire 1-minute warning buzzer when crossing the 1-minute-remaining threshold
+    // Only if no rest minute is currently active
     const threshold1m = halfTimeLengthMs - 60_000;
-    if (threshold1m > 0 && state.playedTimeMs < threshold1m && newTime >= threshold1m) {
+    if (threshold1m > 0 && state.playedTimeMs < threshold1m && newTime >= threshold1m && !state.restMinute) {
       playBuzzer();
     }
     if (newTime >= halfTimeLengthMs && halfTimeLengthMs > 0) {
