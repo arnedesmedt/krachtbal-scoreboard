@@ -8,6 +8,7 @@ import { ClockDisplay } from './ClockDisplay';
 import { ScorePanel } from './ScorePanel';
 import { RestMinutePanel } from './RestMinutePanel';
 import { InitiatorPopup } from './InitiatorPopup';
+import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
 
 export default function ControlWindow() {
@@ -32,7 +33,31 @@ export default function ControlWindow() {
   const showPopup = restMinute !== null && restMinute.initiatorTeam === null;
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [showPenaltyConfirm, setShowPenaltyConfirm] = useState(false);
+  const [penaltyTeam, setPenaltyTeam] = useState<'A' | 'B' | null>(null);
   const abandonGame = useGameStore((s) => s.abandonGame);
+
+  const handleShowPenaltyConfirm = (team: 'A' | 'B') => {
+    setPenaltyTeam(team);
+    setShowPenaltyConfirm(true);
+  };
+
+  const confirmPenalty = () => {
+    if (penaltyTeam) {
+      const addTeamPenalty = useGameStore.getState().addTeamPenalty;
+      addTeamPenalty(penaltyTeam);
+      playBuzzer(); // Ring bell for 3rd penalty
+      
+      // Update the ScorePanel's thirdPenaltyConfirmed state
+      // This is a bit of a hack, but we need to communicate back to the ScorePanel
+      const scorePanelElements = document.querySelectorAll(`[data-team="${penaltyTeam}"]`);
+      scorePanelElements.forEach(el => {
+        (el as any).dispatchEvent(new CustomEvent('resetPenalties'));
+      });
+    }
+    setShowPenaltyConfirm(false);
+    setPenaltyTeam(null);
+  };
 
   useEffect(() => {
     setupSyncListener().catch(console.error);
@@ -109,7 +134,7 @@ export default function ControlWindow() {
                 
                 {/* Team A Panel */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <ScorePanel team="A" />
+                  <ScorePanel team="A" onShowPenaltyConfirm={() => handleShowPenaltyConfirm('A')} />
                 </div>
 
                 {/* Center Clock */}
@@ -123,7 +148,7 @@ export default function ControlWindow() {
 
                 {/* Team B Panel */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <ScorePanel team="B" />
+                  <ScorePanel team="B" onShowPenaltyConfirm={() => handleShowPenaltyConfirm('B')} />
                 </div>
 
               </div>
@@ -133,12 +158,12 @@ export default function ControlWindow() {
                 
                 {/* Top-left: Home Team Score */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <ScorePanel team="A" />
+                  <ScorePanel team="A" onShowPenaltyConfirm={() => handleShowPenaltyConfirm('A')} />
                 </div>
 
                 {/* Top-right: Away Team Score */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-                  <ScorePanel team="B" />
+                  <ScorePanel team="B" onShowPenaltyConfirm={() => handleShowPenaltyConfirm('B')} />
                 </div>
 
                 {/* Bottom-left: Stop Match */}
@@ -245,6 +270,19 @@ export default function ControlWindow() {
           </div>
         </div>
       </div>
+    )}
+
+    {/* Penalty Confirmation Dialog */}
+    {showPenaltyConfirm && (
+      <ConfirmationDialog
+        isOpen={showPenaltyConfirm}
+        title="Derde straf?"
+        message={`Weet je zeker dat je de derde straf wilt toekennen aan ${penaltyTeam === 'A' ? config?.teamA.name : config?.teamB.name}? Dit zal een belsignaal activeren.`}
+        onConfirm={confirmPenalty}
+        onCancel={() => setShowPenaltyConfirm(false)}
+        confirmText="Ja, straf toekennen"
+        cancelText="Annuleren"
+      />
     )}
 
       </div>

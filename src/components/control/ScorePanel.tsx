@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { useBuzzer } from '../../hooks/useBuzzer';
 
 const MAX_PENALTIES = 3;
 
 interface ScorePanelProps {
   team: 'A' | 'B';
+  onShowPenaltyConfirm?: () => void;
 }
 
 function PenaltyDots({ count }: { count: number }) {
@@ -25,8 +25,7 @@ function PenaltyDots({ count }: { count: number }) {
   );
 }
 
-export function ScorePanel({ team }: ScorePanelProps) {
-  const [showPenaltyConfirm, setShowPenaltyConfirm] = useState(false);
+export function ScorePanel({ team, onShowPenaltyConfirm }: ScorePanelProps) {
   const [thirdPenaltyConfirmed, setThirdPenaltyConfirmed] = useState(false);
   const { playBuzzer } = useBuzzer();
   
@@ -52,7 +51,7 @@ export function ScorePanel({ team }: ScorePanelProps) {
     } else if (penalties >= 2) {
       // Show confirmation for 3rd penalty
       console.log('Showing confirmation for 3rd penalty');
-      setShowPenaltyConfirm(true);
+      onShowPenaltyConfirm?.();
     } else {
       // Add penalty directly for 1st and 2nd penalties
       console.log('Adding penalty directly');
@@ -60,13 +59,7 @@ export function ScorePanel({ team }: ScorePanelProps) {
     }
   };
 
-  const confirmPenalty = () => {
-    addTeamPenalty(team);
-    playBuzzer(); // Ring bell for 3rd penalty
-    setThirdPenaltyConfirmed(true);
-    setShowPenaltyConfirm(false);
-  };
-
+  
   const handleAdjustScore = (delta: number) => {
     console.log('handleAdjustScore called:', { team, delta, score });
     adjustScore(team, delta);
@@ -164,16 +157,6 @@ export function ScorePanel({ team }: ScorePanelProps) {
         </div>
       </div>
       
-      {/* Confirmation Dialog for 3rd Penalty */}
-      <ConfirmationDialog
-        isOpen={showPenaltyConfirm}
-        title="Derde straf?"
-        message={`Weet je zeker dat je de derde straf wilt toekennen aan ${teamName ?? `Team ${team}`}? Dit zal een belsignaal activeren.`}
-        onConfirm={confirmPenalty}
-        onCancel={() => setShowPenaltyConfirm(false)}
-        confirmText="Ja, straf toekennen"
-        cancelText="Annuleren"
-      />
-    </>
+          </>
   );
 }
