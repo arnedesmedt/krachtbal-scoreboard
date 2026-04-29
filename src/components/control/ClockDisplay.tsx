@@ -103,7 +103,8 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
                   ⚽ Start 3e helft (5 min)
                 </button>
               );
-            } else if (isScoreEqual && hasPlayedThirdHalf) {
+            } else if (hasPlayedThirdHalf) {
+              // 4th half always appears if 3rd half was played, regardless of score
               return (
                 <button
                   type="button"

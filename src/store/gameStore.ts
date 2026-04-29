@@ -561,7 +561,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   startFourthHalf() {
     const state = get();
     if (state.phase !== 'ENDED') return;
-    // Allow 4th half regardless of score equality (it always appears after 3rd half ends)
+    // 4th half always appears if 3rd half was played, regardless of score equality
     const now = Date.now();
     set({ 
       phase: 'FOURTH_HALF', 
