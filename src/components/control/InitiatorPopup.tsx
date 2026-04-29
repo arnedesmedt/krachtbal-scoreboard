@@ -12,58 +12,80 @@ interface InitiatorPopupProps {
 
 export function InitiatorPopup({ onSelect, onCancel, teamAName, teamBName, refereeName, disabledA, disabledB }: InitiatorPopupProps) {
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
-    >
-      <div
-        style={{ backgroundColor: '#fff', borderRadius: '1rem', padding: '2rem', minWidth: '320px', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', color: '#1e293b' }}
-      >
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: '#1e293b' }}>
-          Wie neemt de rustminuut?
-        </h3>
-        <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.5rem' }}>
-          De timer is gestart. Wijs de aanvrager toe of annuleer.
-        </p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+      <div className="w-full h-full flex items-center justify-center p-8">
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/50 p-8 w-full max-w-2xl max-h-screen overflow-auto">
+          <div className="text-center">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">⏱️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                Wie neemt de rustminuut?
+              </h2>
+              <p className="text-slate-600">
+                De timer is gestart. Wijs de aanvrager toe of annuleer.
+              </p>
+            </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            {/* Team Buttons */}
+            <div className="space-y-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => onSelect('A')}
+                  disabled={disabledA}
+                  title={disabledA ? 'Maximum rustminuten bereikt deze helft' : undefined}
+                  className="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-slate-400 disabled:to-slate-500 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                >
+                  {teamAName}
+                  {disabledA && (
+                    <div className="text-sm font-normal mt-1 opacity-75">
+                      max bereikt
+                    </div>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelect('B')}
+                  disabled={disabledB}
+                  title={disabledB ? 'Maximum rustminuten bereikt deze helft' : undefined}
+                  className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-slate-400 disabled:to-slate-500 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                >
+                  {teamBName}
+                  {disabledB && (
+                    <div className="text-sm font-normal mt-1 opacity-75">
+                      max bereikt
+                    </div>
+                  )}
+                </button>
+              </div>
+
+              {/* Referee Button */}
+              <button
+                type="button"
+                onClick={() => onSelect('referee')}
+                className="w-full px-6 py-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+              >
+                {refereeName} (Scheidsrechter)
+              </button>
+            </div>
+
+            {/* Cancel Button */}
             <button
               type="button"
-              onClick={() => onSelect('A')}
-              disabled={disabledA}
-              title={disabledA ? 'Maximum rustminuten bereikt deze helft' : undefined}
-              style={{ flex: 1, padding: '0.75rem 1rem', backgroundColor: disabledA ? '#93c5fd' : '#2563eb', color: '#fff', fontWeight: 700, borderRadius: '0.75rem', border: 'none', cursor: disabledA ? 'not-allowed' : 'pointer', fontSize: '1rem', opacity: disabledA ? 0.5 : 1 }}
+              onClick={onCancel}
+              className="px-6 py-3 text-red-600 font-semibold hover:text-red-700 transition-colors duration-200"
+              style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1rem)' }}
             >
-              {teamAName}
-              {disabledA && <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: '2px' }}>max bereikt</div>}
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelect('B')}
-              disabled={disabledB}
-              title={disabledB ? 'Maximum rustminuten bereikt deze helft' : undefined}
-              style={{ flex: 1, padding: '0.75rem 1rem', backgroundColor: disabledB ? '#fca5a5' : '#dc2626', color: '#fff', fontWeight: 700, borderRadius: '0.75rem', border: 'none', cursor: disabledB ? 'not-allowed' : 'pointer', fontSize: '1rem', opacity: disabledB ? 0.5 : 1 }}
-            >
-              {teamBName}
-              {disabledB && <div style={{ fontSize: '0.65rem', fontWeight: 400, marginTop: '2px' }}>max bereikt</div>}
+              Rustminuut annuleren
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onSelect('referee')}
-            style={{ width: '100%', padding: '0.75rem 1rem', backgroundColor: '#475569', color: '#fff', fontWeight: 700, borderRadius: '0.75rem', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
-          >
-            {refereeName} (Scheidsrechter)
-          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={onCancel}
-          style={{ fontSize: '0.875rem', color: '#ef4444', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          Rustminuut annuleren
-        </button>
       </div>
     </div>
   );

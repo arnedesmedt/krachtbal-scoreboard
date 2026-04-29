@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useGameTimer } from '../../hooks/useGameTimer';
 import { useBuzzer } from '../../hooks/useBuzzer';
@@ -9,6 +9,7 @@ import { ScorePanel } from './ScorePanel';
 import { RestMinutePanel } from './RestMinutePanel';
 import { HalfTimePanel } from './HalfTimePanel';
 import { EndGamePanel } from './EndGamePanel';
+import { InitiatorPopup } from './InitiatorPopup';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
 
 export default function ControlWindow() {
@@ -18,7 +19,20 @@ export default function ControlWindow() {
   const presentationTheme = useGameStore((s) => s.presentationTheme);
   const togglePresentationTheme = useGameStore((s) => s.togglePresentationTheme);
   const { playBuzzer } = useBuzzer();
+  const restMinute = useGameStore((s) => s.restMinute);
+  const assignRestMinute = useGameStore((s) => s.assignRestMinute);
+  const cancelRestMinute = useGameStore((s) => s.cancelRestMinute);
+  const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
+  const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
+  const config = useGameStore((s) => s.config);
+  const abandonGame = useGameStore((s) => s.abandonGame);
   useGameTimer();
+
+  const half = phase === 'FIRST_HALF' || phase === 'SECOND_HALF' ? phase : 'FIRST_HALF';
+  const aUsedThisHalf = restMinutesUsedA[half];
+  const bUsedThisHalf = restMinutesUsedB[half];
+  const showPopup = restMinute !== null && restMinute.initiatorTeam === null;
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   useEffect(() => {
     setupSyncListener().catch(console.error);
@@ -29,63 +43,184 @@ export default function ControlWindow() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1 text-center">
-            {league && (
-              <div className="text-base font-bold text-slate-700 uppercase tracking-widest mb-1">{league}</div>
+    <div className="h-screen w-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+      <div className="w-full h-full flex flex-col">
+        
+        {/* Top Navigation Bar */}
+        <nav className="bg-white shadow-lg border-b border-slate-200" style={{ height: 'clamp(60px, 8vh, 80px)' }}>
+          <div className="h-full flex items-center justify-between px-6">
+            {/* League and Phase */}
+            <div className="flex items-center gap-6">
+              {league && (
+                <div className="font-bold text-slate-700 uppercase tracking-wider" style={{ fontSize: 'clamp(0.875rem, 1.8vw, 1.25rem)' }}>
+                  {league}
+                </div>
+              )}
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full font-semibold shadow-md" style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}>
+                {phaseLabel(phase)}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={playBuzzer}
+                title="Bel rinkelen"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-semibold shadow-md transition-colors duration-200"
+                style={{ fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)' }}
+              >
+                <span style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>🔔</span>
+                Bel
+              </button>
+              <button
+                type="button"
+                onClick={() => togglePresentationTheme()}
+                title={presentationTheme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 rounded-lg font-semibold shadow-md transition-colors duration-200"
+                style={{ fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)' }}
+              >
+                <span style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>{presentationTheme === 'light' ? '☀️' : '🌙'}</span>
+                Thema
+              </button>
+              <button
+                type="button"
+                onClick={() => openSinglePresentationWindow()}
+                title="Presentatiescherm openen"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold shadow-md transition-colors duration-200"
+                style={{ fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)' }}
+              >
+                <span style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>🖥️</span>
+                Scherm
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content Grid */}
+        <main className="flex-1 p-6 overflow-auto" style={{ paddingTop: 'clamp(1rem, 2vh, 2rem)' }}>
+          <div className="h-full grid grid-rows-[auto_1fr] gap-6" style={{ gap: 'clamp(1rem, 2vh, 2rem)' }}>
+            
+            {/* Control Panels Row - Only show when panels are active */}
+            {(phase === 'HALF_TIME' || phase === 'ENDED') && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
+                {phase === 'HALF_TIME' && (
+                  <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
+                    <HalfTimePanel />
+                  </div>
+                )}
+                {phase === 'ENDED' && (
+                  <div className="bg-white rounded-xl shadow-md border border-slate-200 p-4">
+                    <EndGamePanel />
+                  </div>
+                )}
+              </div>
             )}
-            <span className="inline-block bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1 rounded-full">
-              {phaseLabel(phase)}
-            </span>
+
+            {/* Score and Clock Section */}
+            <div className="flex-1 overflow-visible">
+              {/* Desktop Layout - 3 columns */}
+              <div className="hidden lg:grid lg:grid-cols-3 gap-4 h-full" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
+                
+                {/* Team A Panel */}
+                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                  <ScorePanel team="A" />
+                </div>
+
+                {/* Center Clock */}
+                <div className="flex flex-col items-center justify-center" style={{ gap: 'clamp(1rem, 2vh, 2rem)' }}>
+                  <ClockDisplay 
+                    showQuitConfirm={showQuitConfirm} 
+                    setShowQuitConfirm={setShowQuitConfirm} 
+                  />
+                  <RestMinutePanel />
+                </div>
+
+                {/* Team B Panel */}
+                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                  <ScorePanel team="B" />
+                </div>
+
+              </div>
+
+              {/* Mobile Layout - 2x2 grid */}
+              <div className="lg:hidden grid grid-cols-2 grid-rows-2 gap-4 h-full" style={{ gap: 'clamp(1rem, 2vw, 1.5rem)' }}>
+                
+                {/* Top-left: Home Team Score */}
+                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                  <ScorePanel team="A" />
+                </div>
+
+                {/* Top-right: Away Team Score */}
+                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                  <ScorePanel team="B" />
+                </div>
+
+                {/* Bottom-left: Stop Match */}
+                <div className="flex flex-col items-center justify-center">
+                  <ClockDisplay 
+                    showQuitConfirm={showQuitConfirm} 
+                    setShowQuitConfirm={setShowQuitConfirm} 
+                  />
+                </div>
+
+                {/* Bottom-right: Rest Minutes */}
+                <div className="flex flex-col items-center justify-center">
+                  <RestMinutePanel />
+                </div>
+
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={playBuzzer}
-              title="Bel rinkelen"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-semibold transition-colors"
-            >
-              🔔 Bel
-            </button>
-            <button
-              type="button"
-              onClick={() => togglePresentationTheme()}
-              title={presentationTheme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
-            >
-              {presentationTheme === 'light' ? '☀️' : '🌙'}
-            </button>
-            <button
-              type="button"
-              onClick={() => openSinglePresentationWindow()}
-              title="Presentatiescherm openen"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition-colors"
-            >
-              🖥️ Scherm openen
-            </button>
+        </main>
+      </div>
+    
+    {/* Global Popups - rendered outside container constraints */}
+    {showPopup && (
+      <InitiatorPopup
+        teamAName={config?.teamA.name ?? 'Team A'}
+        teamBName={config?.teamB.name ?? 'Team B'}
+        refereeName={config?.referee ?? 'Scheidsrechter'}
+        onSelect={assignRestMinute}
+        onCancel={cancelRestMinute}
+        disabledA={aUsedThisHalf >= 2}
+        disabledB={bUsedThisHalf >= 2}
+      />
+    )}
+
+    {/* Quit Confirmation Dialog */}
+    {showQuitConfirm && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 border border-slate-200/50 max-h-screen overflow-auto">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Wedstrijd stoppen?</h3>
+            <p className="text-slate-600 mb-6">De wedstrijd wordt gestopt en je keert terug naar het configuratiescherm.</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowQuitConfirm(false)}
+                className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors"
+              >
+                Annuleren
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowQuitConfirm(false);
+                  abandonGame();
+                }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold transition-colors"
+              >
+                Ja, stoppen
+              </button>
+            </div>
           </div>
-        </div>
-
-        <HalfTimePanel />
-        <EndGamePanel />
-
-        <div className="grid grid-cols-3 gap-4">
-          {/* Left: Team A */}
-          <ScorePanel team="A" />
-
-          {/* Center: Clock + Rest Minute */}
-          <div className="flex flex-col items-center space-y-4">
-            <ClockDisplay />
-            <RestMinutePanel />
-          </div>
-
-          {/* Right: Team B */}
-          <ScorePanel team="B" />
         </div>
       </div>
-    </div>
+    )}
+  </div>
   );
 }

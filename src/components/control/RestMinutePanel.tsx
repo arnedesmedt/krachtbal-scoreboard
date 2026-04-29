@@ -1,6 +1,5 @@
 import { useGameStore } from '../../store/gameStore';
 import { formatMs } from '../../utils/formatTime';
-import { InitiatorPopup } from './InitiatorPopup';
 
 const MAX_TEAM_REST_MINUTES = 2;
 
@@ -24,7 +23,6 @@ export function RestMinutePanel() {
   const refUsedThisHalf = restMinutesUsedReferee[half];
 
   const canStart = isActiveHalf && clockRunning && !restMinute;
-  const showPopup = restMinute !== null && restMinute.initiatorTeam === null;
 
   const initiatorLabel =
     restMinute?.initiatorTeam === 'A' ? config?.teamA.name ?? 'Team A'
@@ -33,67 +31,113 @@ export function RestMinutePanel() {
     : null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 w-full text-center">
-      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Rustminuten</h4>
-
-      {/* Per-half counters */}
-      <div className="flex gap-3 justify-center text-xs text-slate-500 mb-1">
-        <span className="font-semibold text-slate-400 uppercase tracking-wide">Deze helft</span>
-      </div>
-      <div className="flex gap-4 justify-center text-sm text-slate-600 mb-1">
-        <span>
-          <span className="font-semibold">{config?.teamA.name ?? 'Team A'}:</span>{' '}
-          <span className={aUsedThisHalf >= MAX_TEAM_REST_MINUTES ? 'text-red-500 font-bold' : ''}>{aUsedThisHalf}</span>
-          <span className="text-slate-400">/{MAX_TEAM_REST_MINUTES}</span>
-        </span>
-        <span>
-          <span className="font-semibold">{config?.teamB.name ?? 'Team B'}:</span>{' '}
-          <span className={bUsedThisHalf >= MAX_TEAM_REST_MINUTES ? 'text-red-500 font-bold' : ''}>{bUsedThisHalf}</span>
-          <span className="text-slate-400">/{MAX_TEAM_REST_MINUTES}</span>
-        </span>
-        <span><span className="font-semibold">Ref:</span> {refUsedThisHalf}</span>
-      </div>
-      {/* Total counters */}
-      <div className="flex gap-4 justify-center text-xs text-slate-400 mb-3">
-        <span>Totaal A: {restMinutesUsedA.FIRST_HALF + restMinutesUsedA.SECOND_HALF}</span>
-        <span>Totaal B: {restMinutesUsedB.FIRST_HALF + restMinutesUsedB.SECOND_HALF}</span>
-        <span>Totaal Ref: {restMinutesUsedReferee.FIRST_HALF + restMinutesUsedReferee.SECOND_HALF}</span>
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200/50 p-6 w-full text-center h-full flex flex-col justify-between">
+      {/* Header */}
+      <div className="mb-4">
+        <h4 
+          className="font-bold text-slate-600 uppercase tracking-wider"
+          style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
+        >
+          Rustminuten
+        </h4>
       </div>
 
+      {/* Current Half Stats */}
+      <div className="mb-3">
+        <div 
+          className="font-semibold text-slate-500 uppercase tracking-wide mb-2"
+          style={{ fontSize: 'clamp(0.625rem, 1.2vw, 0.875rem)' }}
+        >
+          Deze helft
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-sm" style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}>
+          <div className="bg-slate-50 rounded-lg p-2">
+            <div className="font-semibold text-slate-700 truncate">{config?.teamA.name ?? 'Team A'}</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className={aUsedThisHalf >= MAX_TEAM_REST_MINUTES ? 'text-red-500 font-bold' : 'text-slate-600'}>
+                {aUsedThisHalf}
+              </span>
+              <span className="text-slate-400">/</span>
+              <span className="text-slate-400">{MAX_TEAM_REST_MINUTES}</span>
+            </div>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-2">
+            <div className="font-semibold text-slate-700 truncate">{config?.teamB.name ?? 'Team B'}</div>
+            <div className="flex items-center justify-center gap-1">
+              <span className={bUsedThisHalf >= MAX_TEAM_REST_MINUTES ? 'text-red-500 font-bold' : 'text-slate-600'}>
+                {bUsedThisHalf}
+              </span>
+              <span className="text-slate-400">/</span>
+              <span className="text-slate-400">{MAX_TEAM_REST_MINUTES}</span>
+            </div>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-2">
+            <div className="font-semibold text-slate-700">Ref</div>
+            <div className="text-slate-600">{refUsedThisHalf}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Total Stats */}
+      <div className="mb-4">
+        <div 
+          className="text-slate-400 text-center"
+          style={{ fontSize: 'clamp(0.625rem, 1.1vw, 0.75rem)' }}
+        >
+          Totaal: A:{restMinutesUsedA.FIRST_HALF + restMinutesUsedA.SECOND_HALF} | 
+          B:{restMinutesUsedB.FIRST_HALF + restMinutesUsedB.SECOND_HALF} | 
+          Ref:{restMinutesUsedReferee.FIRST_HALF + restMinutesUsedReferee.SECOND_HALF}
+        </div>
+      </div>
+
+      {/* Active Rest Minute Display */}
       {restMinute && (
-        <div className="mb-3">
-          <div className="text-3xl font-mono font-bold text-orange-600">
-            {formatMs(restMinute.remainingMs)}
+        <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200/50">
+          <div className="relative">
+            <div 
+              className="font-mono font-bold text-orange-600 drop-shadow"
+              style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)' }}
+            >
+              {formatMs(restMinute.remainingMs)}
+            </div>
+            {/* Glow effect */}
+            <div 
+              className="absolute inset-0 font-mono font-bold text-transparent bg-gradient-to-r from-orange-300/30 to-red-300/30 blur-lg"
+              style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)' }}
+            >
+              {formatMs(restMinute.remainingMs)}
+            </div>
           </div>
           {initiatorLabel !== null ? (
-            <div className="text-sm font-semibold text-orange-500 mt-1">{initiatorLabel}</div>
+            <div 
+              className="font-semibold text-orange-500 mt-2"
+              style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
+            >
+              {initiatorLabel}
+            </div>
           ) : (
-            <div className="text-sm text-slate-400 mt-1 italic">Toewijzen…</div>
+            <div 
+              className="text-slate-400 mt-2 italic"
+              style={{ fontSize: 'clamp(0.625rem, 1.2vw, 0.875rem)' }}
+            >
+              Toewijzen…
+            </div>
           )}
         </div>
       )}
 
+      {/* Action Button */}
       <button
         type="button"
         onClick={startRestMinute}
         disabled={!canStart}
         aria-label="Rustminuut starten"
-        className="px-5 py-2 bg-orange-100 hover:bg-orange-200 disabled:opacity-40 disabled:cursor-not-allowed text-orange-800 font-semibold rounded-xl transition-colors text-sm"
+        className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-semibold rounded-xl transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
       >
         Rustminuut starten
       </button>
 
-      {showPopup && (
-        <InitiatorPopup
-          teamAName={config?.teamA.name ?? 'Team A'}
-          teamBName={config?.teamB.name ?? 'Team B'}
-          refereeName={config?.referee ?? 'Scheidsrechter'}
-          onSelect={assignRestMinute}
-          onCancel={cancelRestMinute}
-          disabledA={aUsedThisHalf >= MAX_TEAM_REST_MINUTES}
-          disabledB={bUsedThisHalf >= MAX_TEAM_REST_MINUTES}
-        />
-      )}
-    </div>
+      </div>
   );
 }
