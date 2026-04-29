@@ -286,6 +286,8 @@ export const useGameStore = create<GameStore>((set, get) => {
 
   adjustScore(team, delta) {
     const state = get();
+    // Allow score changes during active halves (including during rest minutes)
+    // Prevent during SETUP, HALF_TIME, and ENDED phases
     if (!isActiveHalf(state.phase)) return;
     if (team === 'A') {
       const newScore = state.scoreA + delta;
