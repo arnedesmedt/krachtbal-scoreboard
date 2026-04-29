@@ -489,6 +489,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           halvesPlayed: [...state.halvesPlayed, 'FIRST_HALF'],
           lastSavedTimeMs: now
         });
+        saveGameState(get());
       } else if (state.phase === 'SECOND_HALF') {
         playBuzzer();
         set({ 
@@ -498,6 +499,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           halvesPlayed: [...state.halvesPlayed, 'SECOND_HALF'],
           lastSavedTimeMs: now
         });
+        saveGameState(get());
       } else if (state.phase === 'THIRD_HALF') {
         playBuzzer();
         set({ 
@@ -507,6 +509,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           halvesPlayed: [...state.halvesPlayed, 'THIRD_HALF'],
           lastSavedTimeMs: now
         });
+        saveGameState(get());
       } else if (state.phase === 'FOURTH_HALF') {
         playBuzzer();
         set({ 
@@ -516,6 +519,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           halvesPlayed: [...state.halvesPlayed, 'FOURTH_HALF'],
           lastSavedTimeMs: now
         });
+        saveGameState(get());
       }
     } else {
       const now = Date.now();
@@ -524,7 +528,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         lastSavedTimeMs: now
       });
     }
-    saveGameState(get());
+    // Only emit state update for clock, don't save to localStorage continuously
     safeEmit('game-state-update', buildPayload(get()));
   },
 
