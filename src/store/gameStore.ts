@@ -36,7 +36,7 @@ let _playBuzzer: (() => void) | null = null;
 export function setBuzzerFn(fn: () => void) { _playBuzzer = fn; }
 function playBuzzer() { _playBuzzer?.(); }
 
-const ACTIVE_HALVES = ['FIRST_HALF', 'SECOND_HALF'] as const;
+const ACTIVE_HALVES = ['FIRST_HALF', 'SECOND_HALF', 'THIRD_HALF', 'FOURTH_HALF'] as const;
 type ActiveHalf = (typeof ACTIVE_HALVES)[number];
 function isActiveHalf(phase: string): phase is ActiveHalf {
   return ACTIVE_HALVES.includes(phase as ActiveHalf);
@@ -52,10 +52,11 @@ const initialState: GameState = {
   playedTimeMs: 0,
   clockRunning: false,
   restMinute: null,
-  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
-  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
   presentationTheme: 'light',
+  halvesPlayed: [],
   // Timing persistence fields
   halfStartTimeMs: null,
   restMinuteStartTimeMs: null,
@@ -63,8 +64,17 @@ const initialState: GameState = {
 };
 
 function buildPayload(state: GameState): GameStateUpdatePayload {
-  const half = (state.phase === 'FIRST_HALF' || state.phase === 'SECOND_HALF') ? state.phase : 'FIRST_HALF';
-  const baseHalfMs = state.config ? state.config.halfTimeLengthMinutes * 60 * 1000 : 0;
+  let half: keyof typeof state.restMinutesUsedA;
+  let baseHalfMs: number;
+  
+  if (state.phase === 'THIRD_HALF' || state.phase === 'FOURTH_HALF') {
+    half = state.phase;
+    baseHalfMs = 5 * 60 * 1000; // 5 minutes for 3rd and 4th halves
+  } else {
+    half = (state.phase === 'FIRST_HALF' || state.phase === 'SECOND_HALF') ? state.phase : 'FIRST_HALF';
+    baseHalfMs = state.config ? state.config.halfTimeLengthMinutes * 60 * 1000 : 0;
+  }
+  
   const totalRestMs = (
     state.restMinutesUsedA[half] +
     state.restMinutesUsedB[half] +
@@ -114,6 +124,8 @@ interface GameActions {
   tickClock: (deltaMs: number) => void;
   clearRestMinute: () => void;
   startSecondHalf: () => void;
+  startThirdHalf: () => void;
+  startFourthHalf: () => void;
   resetGame: () => void;
   abandonGame: () => Promise<void>;
 }
@@ -439,7 +451,14 @@ export const useGameStore = create<GameStore>((set, get) => {
     if (!state.clockRunning) return;
     if (!isActiveHalf(state.phase)) return;
     const half = state.phase;
-    const baseHalfMs = (state.config?.halfTimeLengthMinutes ?? 0) * 60 * 1000;
+    let baseHalfMs: number;
+    
+    if (half === 'THIRD_HALF' || half === 'FOURTH_HALF') {
+      baseHalfMs = 5 * 60 * 1000; // 5 minutes for 3rd and 4th halves
+    } else {
+      baseHalfMs = (state.config?.halfTimeLengthMinutes ?? 0) * 60 * 1000;
+    }
+    
     const totalRestMs = (
       state.restMinutesUsedA[half] +
       state.restMinutesUsedB[half] +
@@ -461,6 +480,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           playedTimeMs: halfTimeLengthMs, 
           clockRunning: false, 
           phase: 'HALF_TIME',
+          halvesPlayed: [...state.halvesPlayed, 'FIRST_HALF'],
           lastSavedTimeMs: now
         });
       } else if (state.phase === 'SECOND_HALF') {
@@ -469,6 +489,25 @@ export const useGameStore = create<GameStore>((set, get) => {
           playedTimeMs: halfTimeLengthMs, 
           clockRunning: false, 
           phase: 'ENDED',
+          halvesPlayed: [...state.halvesPlayed, 'SECOND_HALF'],
+          lastSavedTimeMs: now
+        });
+      } else if (state.phase === 'THIRD_HALF') {
+        playBuzzer();
+        set({ 
+          playedTimeMs: halfTimeLengthMs, 
+          clockRunning: false, 
+          phase: 'ENDED',
+          halvesPlayed: [...state.halvesPlayed, 'THIRD_HALF'],
+          lastSavedTimeMs: now
+        });
+      } else if (state.phase === 'FOURTH_HALF') {
+        playBuzzer();
+        set({ 
+          playedTimeMs: halfTimeLengthMs, 
+          clockRunning: false, 
+          phase: 'ENDED',
+          halvesPlayed: [...state.halvesPlayed, 'FOURTH_HALF'],
           lastSavedTimeMs: now
         });
       }
@@ -488,6 +527,38 @@ export const useGameStore = create<GameStore>((set, get) => {
     const now = Date.now();
     set({ 
       phase: 'SECOND_HALF', 
+      playedTimeMs: 0, 
+      clockRunning: true,
+      halfStartTimeMs: now,
+      lastSavedTimeMs: now
+    });
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  startThirdHalf() {
+    const state = get();
+    if (state.phase !== 'ENDED') return;
+    if (state.scoreA !== state.scoreB) return; // Only allow if scores are equal
+    const now = Date.now();
+    set({ 
+      phase: 'THIRD_HALF', 
+      playedTimeMs: 0, 
+      clockRunning: true,
+      halfStartTimeMs: now,
+      lastSavedTimeMs: now
+    });
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  startFourthHalf() {
+    const state = get();
+    if (state.phase !== 'ENDED') return;
+    // Allow 4th half regardless of score equality (it always appears after 3rd half ends)
+    const now = Date.now();
+    set({ 
+      phase: 'FOURTH_HALF', 
       playedTimeMs: 0, 
       clockRunning: true,
       halfStartTimeMs: now,

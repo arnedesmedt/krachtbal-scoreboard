@@ -1,4 +1,4 @@
-export type GamePhase = 'SETUP' | 'FIRST_HALF' | 'HALF_TIME' | 'SECOND_HALF' | 'ENDED';
+export type GamePhase = 'SETUP' | 'FIRST_HALF' | 'HALF_TIME' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' | 'ENDED';
 
 export type RestMinuteInitiator = 'A' | 'B' | 'referee';
 
@@ -26,6 +26,8 @@ export interface RestMinuteState {
 export interface RestMinutesPerHalf {
   FIRST_HALF: number;
   SECOND_HALF: number;
+  THIRD_HALF: number;
+  FOURTH_HALF: number;
 }
 
 export type PresentationTheme = 'dark' | 'light';
@@ -44,6 +46,7 @@ export interface GameState {
   restMinutesUsedB: RestMinutesPerHalf;
   restMinutesUsedReferee: RestMinutesPerHalf;
   presentationTheme: PresentationTheme;
+  halvesPlayed: ('FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF')[];
   // Timing persistence fields
   halfStartTimeMs: number | null; // When the current half started
   restMinuteStartTimeMs: number | null; // When the current rest minute started

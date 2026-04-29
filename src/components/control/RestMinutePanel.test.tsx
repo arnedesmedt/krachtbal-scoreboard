@@ -9,6 +9,7 @@ vi.mock('@tauri-apps/api/event');
 vi.mock('@tauri-apps/api/webviewWindow');
 
 const config: GameConfig = {
+  gameId: 'test-game-1',
   teamA: { name: 'Eagles', color: '#f00', color2: '#ffffff' },
   teamB: { name: 'Lions', color: '#00f', color2: '#ffffff' },
   referee: 'R',
@@ -23,9 +24,10 @@ describe('RestMinutePanel', () => {
       clockRunning: true,
       restMinute: null,
       config,
-      restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
-      restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-      restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+      restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      presentationTheme: "light"
     });
   });
 

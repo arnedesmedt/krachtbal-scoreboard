@@ -25,9 +25,10 @@ const payload: GameStateUpdatePayload = {
   league: '',
   penaltiesA: 3,
   penaltiesB: 0,
-  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
-  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+  restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  presentationTheme: "light"
 };
 
 describe('PenaltyDisplay', () => {

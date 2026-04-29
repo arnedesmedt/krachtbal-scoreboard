@@ -10,6 +10,7 @@ const validConfig: GameConfig = {
   teamB: { name: 'Team Beta', color: '#0000FF', color2: '#ffffff' },
   referee: 'Ref Joe',
   league: '',
+  gameId: "test-game",
   halfTimeLengthMinutes: 20,
 };
 
@@ -22,9 +23,10 @@ function resetStore() {
     playedTimeMs: 0,
     clockRunning: false,
     restMinute: null,
-    restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
-    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+    restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  presentationTheme: "light"
   });
 }
 
@@ -171,9 +173,10 @@ describe('gameStore – tickRestMinute', () => {
     useGameStore.getState().tickRestMinute(60_001);
     expect(useGameStore.getState().restMinute).toBeNull();
     // Counter was already incremented at assignRestMinute time
-    expect(useGameStore.getState().restMinutesUsedA).toEqual({ FIRST_HALF: 1, SECOND_HALF: 0 });
-    expect(useGameStore.getState().restMinutesUsedB).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0 });
-    expect(useGameStore.getState().restMinutesUsedReferee).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0 });
+    expect(useGameStore.getState().restMinutesUsedA).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 });
+    expect(useGameStore.getState().restMinutesUsedB).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 });
+    expect(useGameStore.getState().restMinutesUsedReferee).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 });
+  presentationTheme: "light"
   });
 });
 

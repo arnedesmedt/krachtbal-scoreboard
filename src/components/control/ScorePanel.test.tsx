@@ -13,6 +13,7 @@ const config: GameConfig = {
   teamB: { name: 'Lions', color: '#00f', color2: '#ffffff' },
   referee: 'R',
   league: '',
+  gameId: "test-game",
   halfTimeLengthMinutes: 20,
 };
 

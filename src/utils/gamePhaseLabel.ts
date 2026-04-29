@@ -10,6 +10,10 @@ export function phaseLabel(phase: GamePhase): string {
       return 'Rust';
     case 'SECOND_HALF':
       return 'Tweede Helft';
+    case 'THIRD_HALF':
+      return 'Derde Helft';
+    case 'FOURTH_HALF':
+      return 'Vierde Helft';
     case 'ENDED':
       return 'Afgelopen';
   }

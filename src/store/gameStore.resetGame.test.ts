@@ -9,7 +9,8 @@ const validConfig: GameConfig = {
   teamA: { name: 'Team Alpha', color: '#FF0000', color2: '#ffffff' },
   teamB: { name: 'Team Beta', color: '#0000FF', color2: '#ffffff' },
   referee: 'Ref Joe',
-  halfTimeLengthMinutes: 1,
+  gameId: "test-game",
+  halfTimeLengthMinutes: 20,
   league: '',
 };
 
@@ -22,9 +23,10 @@ function resetStore() {
     playedTimeMs: 0,
     clockRunning: false,
     restMinute: null,
-    restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0 },
-    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+    restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  presentationTheme: "light"
   });
 }
 
@@ -37,9 +39,10 @@ function setEnded() {
     playedTimeMs: 60_000,
     clockRunning: false,
     restMinute: null,
-    restMinutesUsedA: { FIRST_HALF: 1, SECOND_HALF: 0 },
-    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0 },
-    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0 },
+    restMinutesUsedA: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+  presentationTheme: "light"
   });
 }
 
@@ -56,8 +59,8 @@ describe('gameStore – resetGame', () => {
     expect(state.scoreB).toBe(0);
     expect(state.config).toBeNull();
     expect(state.restMinute).toBeNull();
-    expect(state.restMinutesUsedA).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0 });
-    expect(state.restMinutesUsedB).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0 });
+    expect(state.restMinutesUsedA).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 });
+    expect(state.restMinutesUsedB).toEqual({ FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 });
   });
 
   it('is blocked when phase !== ENDED', async () => {
