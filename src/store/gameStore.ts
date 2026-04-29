@@ -112,10 +112,58 @@ interface GameActions {
   abandonGame: () => Promise<void>;
 }
 
+// Persistence functions
+const saveGameState = (state: GameState) => {
+  try {
+    const stateToSave = {
+      ...state,
+      // Don't save setup phase - only save active games
+      phase: state.phase === 'SETUP' ? 'SETUP' : state.phase,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('krachtbal-game-state', JSON.stringify(stateToSave));
+  } catch (error) {
+    console.error('Failed to save game state:', error);
+  }
+};
+
+const loadGameState = (): Partial<GameState> | null => {
+  try {
+    const saved = localStorage.getItem('krachtbal-game-state');
+    if (!saved) return null;
+    
+    const parsed = JSON.parse(saved);
+    // Only restore if it's not too old (e.g., within 24 hours)
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    if (Date.now() - parsed.timestamp > maxAge) {
+      localStorage.removeItem('krachtbal-game-state');
+      return null;
+    }
+    
+    return parsed;
+  } catch (error) {
+    console.error('Failed to load game state:', error);
+    return null;
+  }
+};
+
+const clearGameState = () => {
+  try {
+    localStorage.removeItem('krachtbal-game-state');
+  } catch (error) {
+    console.error('Failed to clear game state:', error);
+  }
+};
+
 type GameStore = GameState & GameActions;
 
-export const useGameStore = create<GameStore>((set, get) => ({
-  ...initialState,
+export const useGameStore = create<GameStore>((set, get) => {
+  // Try to load saved state on initialization
+  const savedState = loadGameState();
+  const initialStateWithSaved = savedState ? { ...initialState, ...savedState } : initialState;
+  
+  return {
+    ...initialStateWithSaved,
 
   setConfig(config) {
     if (get().phase !== 'SETUP') return;
@@ -129,7 +177,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { config } = state;
     if (!config) return;
     if (!config.teamA?.name || !config.teamB?.name || !config.referee) return;
-    set({ phase: 'FIRST_HALF', clockRunning: false });
+    const newState = { phase: 'FIRST_HALF', clockRunning: false };
+    set(newState);
+    saveGameState({ ...get(), ...newState });
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -167,6 +217,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (newScore < 0) return;
       set({ scoreB: newScore });
     }
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -210,6 +261,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ? { ...state.restMinutesUsedReferee, [half]: state.restMinutesUsedReferee[half] + 1 }
         : state.restMinutesUsedReferee,
     });
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -274,12 +326,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else {
       set({ playedTimeMs: newTime });
     }
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
   startSecondHalf() {
     if (get().phase !== 'HALF_TIME') return;
     set({ phase: 'SECOND_HALF', playedTimeMs: 0, clockRunning: false });
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -291,6 +345,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await win?.close();
     }
     set({ ...initialState });
+    clearGameState(); // Clear saved state when game is reset
     safeEmit('game-state-update', buildPayload(get()));
   },
 
@@ -300,6 +355,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await win?.close();
     }
     set({ ...initialState });
+    clearGameState(); // Clear saved state when game is abandoned
     safeEmit('game-state-update', buildPayload(get()));
   },
 }));
