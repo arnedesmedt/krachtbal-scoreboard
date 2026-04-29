@@ -16,7 +16,7 @@ export function RestMinuteDisplay({ payload, theme = 'light' }: RestMinuteDispla
       : initiatorTeam === 'B'
       ? ` — ${payload.teamB.name}`
       : initiatorTeam === 'referee'
-      ? ` — ${payload.referee}`
+      ? ' — Scheidsrechter'
       : '';
 
   return (
