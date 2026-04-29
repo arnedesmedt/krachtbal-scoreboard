@@ -105,6 +105,7 @@ interface GameActions {
   toggleClock: () => void;
   adjustScore: (team: 'A' | 'B', delta: number) => void;
   addTeamPenalty: (team: 'A' | 'B') => void;
+  setPenalties: (team: 'A' | 'B', count: number) => void;
   startRestMinute: () => void;
   assignRestMinute: (initiator: RestMinuteInitiator) => void;
   cancelRestMinute: () => void;
@@ -309,6 +310,18 @@ export const useGameStore = create<GameStore>((set, get) => {
       const next = (state.penaltiesB + 1) % 4;
       set({ penaltiesB: next });
     }
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  setPenalties(team, count) {
+    const state = get();
+    if (!isActiveHalf(state.phase)) return;
+    if (team === 'A') {
+      set({ penaltiesA: Math.max(0, Math.min(3, count)) });
+    } else {
+      set({ penaltiesB: Math.max(0, Math.min(3, count)) });
+    }
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
 
