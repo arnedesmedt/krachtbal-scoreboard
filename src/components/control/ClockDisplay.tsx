@@ -23,9 +23,20 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
   const scoreB = useGameStore((s) => s.scoreB);
   const halvesPlayed = useGameStore((s) => s.halvesPlayed);
 
-  const isActiveHalf = phase === 'FIRST_HALF' || phase === 'SECOND_HALF';
-  const half: 'FIRST_HALF' | 'SECOND_HALF' = phase === 'SECOND_HALF' ? 'SECOND_HALF' : 'FIRST_HALF';
-  const baseHalfMs = config ? config.halfTimeLengthMinutes * 60 * 1000 : 0;
+  const isActiveHalf = phase === 'FIRST_HALF' || phase === 'SECOND_HALF' || phase === 'THIRD_HALF' || phase === 'FOURTH_HALF';
+  
+  // Calculate half time length based on phase
+  let baseHalfMs: number;
+  let half: 'FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF';
+  
+  if (phase === 'THIRD_HALF' || phase === 'FOURTH_HALF') {
+    half = phase;
+    baseHalfMs = 5 * 60 * 1000; // 5 minutes for 3rd and 4th halves
+  } else {
+    half = phase === 'SECOND_HALF' ? 'SECOND_HALF' : 'FIRST_HALF';
+    baseHalfMs = config ? config.halfTimeLengthMinutes * 60 * 1000 : 0;
+  }
+  
   const totalRestMs =
     ((restMinutesUsedA?.[half] ?? 0) +
       (restMinutesUsedB?.[half] ?? 0) +
