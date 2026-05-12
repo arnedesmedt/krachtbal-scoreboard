@@ -13,7 +13,7 @@ export const LEAGUES: League[] = [
   {
     id: 'hoger-dames',
     name: 'Hoger Dames',
-    durationMinutes: 1
+    durationMinutes: 2
   },
   {
     id: 'lager-heren',

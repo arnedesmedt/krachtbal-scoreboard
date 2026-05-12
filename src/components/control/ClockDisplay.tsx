@@ -15,6 +15,7 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
   const startSecondHalf = useGameStore((s) => s.startSecondHalf);
   const startThirdHalf = useGameStore((s) => s.startThirdHalf);
   const startFourthHalf = useGameStore((s) => s.startFourthHalf);
+  const startPenaltyShootout = useGameStore((s) => s.startPenaltyShootout);
   const config = useGameStore((s) => s.config);
   const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
   const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
@@ -22,6 +23,7 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
   const scoreA = useGameStore((s) => s.scoreA);
   const scoreB = useGameStore((s) => s.scoreB);
   const halvesPlayed = useGameStore((s) => s.halvesPlayed);
+  const penaltyShootout = useGameStore((s) => s.penaltyShootout);
 
   const isActiveHalf = phase === 'FIRST_HALF' || phase === 'SECOND_HALF' || phase === 'THIRD_HALF' || phase === 'FOURTH_HALF';
   
@@ -88,6 +90,19 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
           </button>
         ) : phase === 'ENDED' ? (
           (() => {
+            if (penaltyShootout) {
+              return (
+                <button
+                  type="button"
+                  onClick={onQuitClick}
+                  aria-label="Nieuwe wedstrijd starten"
+                  className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                  style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+                >
+                  🏁 Nieuwe wedstrijd
+                </button>
+              );
+            }
             const isScoreEqual = scoreA === scoreB;
             const hasPlayedThirdHalf = halvesPlayed.includes('THIRD_HALF');
             const hasPlayedFourthHalf = halvesPlayed.includes('FOURTH_HALF');
@@ -118,9 +133,20 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
                 </button>
               );
             } else {
-              // Show nieuwe wedstrijd button when: 
-              // - No 3rd half was played and scores are not equal, OR
-              // - Both 3rd and 4th halves have been played
+              // After 4th half: offer shootout if tied, otherwise new game
+              if (isScoreEqual) {
+                return (
+                  <button
+                    type="button"
+                    onClick={startPenaltyShootout}
+                    aria-label="Start vrije worpen"
+                    className="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                    style={{ fontSize: 'clamp(0.875rem, 1.6vw, 1.25rem)' }}
+                  >
+                    🥅 Start Vrije Worpen
+                  </button>
+                );
+              }
               return (
                 <button
                   type="button"

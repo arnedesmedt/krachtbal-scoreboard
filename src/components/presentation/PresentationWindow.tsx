@@ -4,8 +4,8 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import type { GameStateUpdatePayload } from '../../types/game';
 import { BROADCAST_CHANNEL_NAME } from '../../store/gameStore';
 import { ScoreBoard } from './ScoreBoard';
-import { TimerDisplay } from './TimerDisplay';
-import { RestMinuteDisplay } from './RestMinuteDisplay';
+import { phaseLabel } from '../../utils/gamePhaseLabel';
+import { formatMs } from '../../utils/formatTime';
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -27,6 +27,7 @@ const DEFAULT_PAYLOAD: GameStateUpdatePayload = {
   restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
   restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
   presentationTheme: 'light',
+  penaltyShootout: null,
 };
 
 export default function PresentationWindow() {
@@ -92,13 +93,22 @@ export default function PresentationWindow() {
     }
   }, []);
 
-  const hasRestMinute = !!state.restMinute;
+  const isDark = theme === 'dark';
+  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
 
-  
+  const restMinuteInitiator = state.restMinute
+    ? state.restMinute.initiatorTeam === 'A'
+      ? state.teamA.name
+      : state.restMinute.initiatorTeam === 'B'
+      ? state.teamB.name
+      : state.restMinute.initiatorTeam === 'referee'
+      ? 'Scheidsrechter'
+      : 'Rustminuut'
+    : null;
+
   return (
     <div
-      className={`h-screen flex flex-col p-8 overflow-hidden ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-white text-gray-900'}`}
-      style={{ gap: '3vh' }}
+      className={`h-screen flex flex-col px-[3vh] py-[3vh] overflow-hidden ${isDark ? 'bg-gradient-to-br from-gray-950 via-slate-900 to-indigo-950 text-white' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-gray-900'}`}
     >
       {!isFullscreen && (
         <button
@@ -107,23 +117,91 @@ export default function PresentationWindow() {
           title="Volledig scherm"
           style={{
             position: 'fixed', top: '1rem', right: '1rem', zIndex: 100,
-            background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+            background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
             border: 'none', borderRadius: '0.5rem', padding: '0.4rem 0.7rem',
             cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1,
-            color: theme === 'dark' ? '#fff' : '#333',
+            color: isDark ? '#fff' : '#333',
           }}
           aria-label="Volledig scherm"
         >
           ⛶
         </button>
       )}
-      <ScoreBoard payload={state} theme={theme} />
-      <div className="flex-1 flex items-center justify-center relative">
-        {hasRestMinute ? (
-          <RestMinuteDisplay payload={state} theme={theme} />
-        ) : (
-          <TimerDisplay payload={state} theme={theme} />
-        )}
+
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-shrink-0 mb-[3vh]">
+        {/* Left: league + phase */}
+        <div className="flex items-center gap-[1.5vw]">
+          {state.league && (
+            <span
+              className={`font-bold uppercase tracking-wider ${textMuted}`}
+              style={{ fontSize: 'clamp(1.5rem, 3.5vw, 3rem)' }}
+            >
+              {state.league}
+            </span>
+          )}
+          <span
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full font-semibold shadow-md"
+            style={{ fontSize: 'clamp(1.2rem, 3vw, 2.2rem)', padding: '0.8vh 3vw' }}
+          >
+            {phaseLabel(state.phase)}
+          </span>
+        </div>
+
+        {/* Right: rest minute (if active) + clock */}
+        <div className="flex items-center" style={{ gap: 'clamp(1rem, 2.5vw, 2.5rem)' }}>
+          {state.restMinute && (
+            <div className="flex items-center" style={{ gap: 'clamp(0.8rem, 1.5vw, 1.5rem)' }}>
+              <span
+                className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full font-semibold shadow-md"
+                style={{ fontSize: 'clamp(1rem, 2vw, 1.6rem)', padding: '0.6vh 2vw' }}
+              >
+                Rustminuut
+              </span>
+              {restMinuteInitiator && restMinuteInitiator !== 'Rustminuut' && (
+                <span
+                  className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full font-semibold shadow-md"
+                  style={{ fontSize: 'clamp(1rem, 2vw, 1.6rem)', padding: '0.6vh 2vw' }}
+                >
+                  {restMinuteInitiator}
+                </span>
+              )}
+              <div className="flex items-center" style={{ gap: 'clamp(0.4rem, 0.8vw, 0.8rem)' }}>
+                <div
+                  className="rounded-full flex-shrink-0 bg-red-500 shadow-lg animate-pulse"
+                  style={{ width: 'clamp(10px, 1.4vw, 18px)', height: 'clamp(10px, 1.4vw, 18px)' }}
+                />
+                <div
+                  className="font-mono font-black tracking-widest leading-none"
+                  style={{ fontSize: 'clamp(2rem, 5vw, 4.5rem)', color: '#f97316' }}
+                >
+                  {formatMs(state.restMinute.remainingMs)}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center" style={{ gap: 'clamp(0.5rem, 1vw, 1rem)' }}>
+            <div
+              className={`rounded-full flex-shrink-0 transition-all duration-500 ${
+                state.clockRunning
+                  ? 'bg-green-500 shadow-lg animate-pulse'
+                  : isDark ? 'bg-white/20' : 'bg-gray-300'
+              }`}
+              style={{ width: 'clamp(14px, 2.2vw, 28px)', height: 'clamp(14px, 2.2vw, 28px)' }}
+            />
+            <div
+              className={`font-mono font-black tracking-widest leading-none ${isDark ? 'text-white' : 'text-gray-900'}`}
+              style={{ fontSize: 'clamp(4rem, 11vw, 11rem)' }}
+            >
+              {formatMs(state.playedTimeMs)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scoreboard */}
+      <div className="mt-[2vh]">
+        <ScoreBoard payload={state} theme={theme} />
       </div>
     </div>
   );

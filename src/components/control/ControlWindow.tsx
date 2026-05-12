@@ -10,6 +10,9 @@ import { RestMinutePanel } from './RestMinutePanel';
 import { InitiatorPopup } from './InitiatorPopup';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
+import { DebugPanel } from './DebugPanel';
+
+const IS_DEV = import.meta.env.DEV;
 
 export default function ControlWindow() {
   const phase = useGameStore((s) => s.phase);
@@ -47,16 +50,8 @@ export default function ControlWindow() {
 
   const confirmPenalty = () => {
     if (penaltyTeam) {
-      const addTeamPenalty = useGameStore.getState().addTeamPenalty;
-      addTeamPenalty(penaltyTeam);
-      playBuzzer(); // Ring bell for 3rd penalty
-      
-      // Update the ScorePanel's thirdPenaltyConfirmed state
-      // This is a bit of a hack, but we need to communicate back to the ScorePanel
-      const scorePanelElements = document.querySelectorAll(`[data-team="${penaltyTeam}"]`);
-      scorePanelElements.forEach(el => {
-        (el as any).dispatchEvent(new CustomEvent('resetPenalties'));
-      });
+      useGameStore.getState().addTeamPenalty(penaltyTeam);
+      playBuzzer();
     }
     setShowPenaltyConfirm(false);
     setPenaltyTeam(null);
@@ -286,6 +281,7 @@ export default function ControlWindow() {
       />
     )}
 
+      {IS_DEV && <DebugPanel />}
       </div>
   );
 }

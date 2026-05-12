@@ -1,4 +1,13 @@
-export type GamePhase = 'SETUP' | 'FIRST_HALF' | 'HALF_TIME' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' | 'ENDED';
+export type GamePhase = 'SETUP' | 'FIRST_HALF' | 'HALF_TIME' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' | 'PENALTY_SHOOTOUT' | 'ENDED';
+
+export type PenaltyBulletState = 'pending' | 'scored' | 'missed';
+
+export interface PenaltyShootoutState {
+  bulletsA: PenaltyBulletState[];
+  bulletsB: PenaltyBulletState[];
+  currentRound: number; // 1-based, starts at 1
+  suddenDeath: boolean; // true when initial 4 rounds are tied
+}
 
 export type RestMinuteInitiator = 'A' | 'B' | 'referee';
 
@@ -47,6 +56,7 @@ export interface GameState {
   restMinutesUsedReferee: RestMinutesPerHalf;
   presentationTheme: PresentationTheme;
   halvesPlayed: ('FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF')[];
+  penaltyShootout: PenaltyShootoutState | null;
   // Timing persistence fields
   halfStartTimeMs: number | null; // When the current half started
   restMinuteStartTimeMs: number | null; // When the current rest minute started
@@ -71,4 +81,5 @@ export type GameStateUpdatePayload = {
   restMinutesUsedB: RestMinutesPerHalf;
   restMinutesUsedReferee: RestMinutesPerHalf;
   presentationTheme: PresentationTheme;
+  penaltyShootout: PenaltyShootoutState | null;
 };

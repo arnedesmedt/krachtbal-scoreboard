@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { emit } from '@tauri-apps/api/event';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
-import type { GameState, GameConfig, GameStateUpdatePayload, RestMinuteInitiator } from '../types/game';
+import type { GameState, GameConfig, GameStateUpdatePayload, RestMinuteInitiator, PenaltyShootoutState, PenaltyBulletState } from '../types/game';
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -57,6 +57,7 @@ const initialState: GameState = {
   restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
   presentationTheme: 'light',
   halvesPlayed: [],
+  penaltyShootout: null,
   // Timing persistence fields
   halfStartTimeMs: null,
   restMinuteStartTimeMs: null,
@@ -103,6 +104,7 @@ function buildPayload(state: GameState): GameStateUpdatePayload {
     restMinutesUsedB: state.restMinutesUsedB,
     restMinutesUsedReferee: state.restMinutesUsedReferee,
     presentationTheme: state.presentationTheme,
+    penaltyShootout: state.penaltyShootout,
   };
 }
 
@@ -126,6 +128,9 @@ interface GameActions {
   startSecondHalf: () => void;
   startThirdHalf: () => void;
   startFourthHalf: () => void;
+  startPenaltyShootout: () => void;
+  setPenaltyBullet: (team: 'A' | 'B', roundIndex: number, state: PenaltyBulletState) => void;
+  nextPenaltyRound: () => void;
   resetGame: () => void;
   abandonGame: () => Promise<void>;
 }
@@ -512,10 +517,11 @@ export const useGameStore = create<GameStore>((set, get) => {
         saveGameState(get());
       } else if (state.phase === 'FOURTH_HALF') {
         playBuzzer();
+        const isTied = state.scoreA === state.scoreB;
         set({ 
           playedTimeMs: halfTimeLengthMs, 
           clockRunning: false, 
-          phase: 'ENDED',
+          phase: isTied ? 'ENDED' : 'ENDED', // Still ENDED, but UI will check for tie
           halvesPlayed: [...state.halvesPlayed, 'FOURTH_HALF'],
           lastSavedTimeMs: now
         });
@@ -597,6 +603,151 @@ export const useGameStore = create<GameStore>((set, get) => {
     }
     set({ ...initialState });
     clearGameState(); // Clear saved state when game is abandoned
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  startPenaltyShootout() {
+    const state = get();
+    if (state.phase !== 'ENDED') return;
+    if (state.scoreA !== state.scoreB) return; // Only allow if scores are equal
+    
+    const penaltyShootout: PenaltyShootoutState = {
+      bulletsA: Array(4).fill('pending' as PenaltyBulletState),
+      bulletsB: Array(4).fill('pending' as PenaltyBulletState),
+      currentRound: 1,
+      suddenDeath: false,
+    };
+    
+    set({ phase: 'PENALTY_SHOOTOUT', penaltyShootout });
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  setPenaltyBullet(team, roundIndex, state) {
+    const current = get();
+    if (!current.penaltyShootout) return;
+    if (roundIndex >= current.penaltyShootout.bulletsA.length) return;
+    
+    const updatedShootout = { ...current.penaltyShootout };
+    if (team === 'A') {
+      updatedShootout.bulletsA = [...updatedShootout.bulletsA];
+      updatedShootout.bulletsA[roundIndex] = state;
+    } else {
+      updatedShootout.bulletsB = [...updatedShootout.bulletsB];
+      updatedShootout.bulletsB[roundIndex] = state;
+    }
+    
+    const scoredA = updatedShootout.bulletsA.filter(b => b === 'scored').length;
+    const scoredB = updatedShootout.bulletsB.filter(b => b === 'scored').length;
+    const decidedA = updatedShootout.bulletsA.filter(b => b !== 'pending').length;
+    const decidedB = updatedShootout.bulletsB.filter(b => b !== 'pending').length;
+
+    // Early termination: if one team can no longer win even with all remaining shots
+    if (!updatedShootout.suddenDeath) {
+      const totalRounds = 4;
+      const maxA = scoredA + (totalRounds - decidedA);
+      const maxB = scoredB + (totalRounds - decidedB);
+      if (scoredA > maxB || scoredB > maxA) {
+        set({ penaltyShootout: { ...updatedShootout, currentRound: Math.max(decidedA, decidedB) }, phase: 'ENDED' });
+        saveGameState(get());
+        safeEmit('game-state-update', buildPayload(get()));
+        return;
+      }
+    }
+
+    // Check if a round just completed (both teams have the same number of decided bullets)
+    const assignedA = decidedA;
+    const assignedB = decidedB;
+    
+    if (assignedA === assignedB) {
+      const completedRound = assignedA;
+      
+      if (completedRound >= 4) {
+        
+        if (scoredA !== scoredB) {
+          // Winner determined — end the game
+          set({ penaltyShootout: { ...updatedShootout, currentRound: completedRound }, phase: 'ENDED' });
+          saveGameState(get());
+          safeEmit('game-state-update', buildPayload(get()));
+          return;
+        } else {
+          // Still tied — add one more bullet for each team (sudden death)
+          updatedShootout.bulletsA = [...updatedShootout.bulletsA, 'pending' as PenaltyBulletState];
+          updatedShootout.bulletsB = [...updatedShootout.bulletsB, 'pending' as PenaltyBulletState];
+          updatedShootout.suddenDeath = true;
+          updatedShootout.currentRound = completedRound + 1;
+        }
+      } else {
+        // Round 1–3 complete — advance currentRound for display
+        updatedShootout.currentRound = completedRound + 1;
+      }
+    }
+    
+    set({ penaltyShootout: updatedShootout });
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  nextPenaltyRound() {
+    const current = get();
+    if (!current.penaltyShootout) return;
+    
+    const shootout = current.penaltyShootout;
+    const scoredA = shootout.bulletsA.filter(b => b === 'scored').length;
+    const scoredB = shootout.bulletsB.filter(b => b === 'scored').length;
+    
+    // Check if we have a winner after initial 4 rounds
+    if (!shootout.suddenDeath && shootout.currentRound >= 4) {
+      if (scoredA !== scoredB) {
+        // Game ends, winner determined by penalty shootout
+        set({ phase: 'ENDED' });
+        saveGameState(get());
+        safeEmit('game-state-update', buildPayload(get()));
+        return;
+      } else {
+        // Enter sudden death
+        const updatedShootout = {
+          ...shootout,
+          suddenDeath: true,
+          currentRound: shootout.currentRound + 1,
+          bulletsA: [...shootout.bulletsA, 'pending' as PenaltyBulletState],
+          bulletsB: [...shootout.bulletsB, 'pending' as PenaltyBulletState],
+        };
+        set({ penaltyShootout: updatedShootout });
+        saveGameState(get());
+        safeEmit('game-state-update', buildPayload(get()));
+        return;
+      }
+    }
+    
+    // Check for sudden death winner
+    if (shootout.suddenDeath && shootout.currentRound > 4) {
+      const currentRoundScoredA = shootout.bulletsA[shootout.currentRound - 1] === 'scored' ? 1 : 0;
+      const currentRoundScoredB = shootout.bulletsB[shootout.currentRound - 1] === 'scored' ? 1 : 0;
+      
+      if (currentRoundScoredA !== currentRoundScoredB) {
+        // Game ends, winner determined by sudden death
+        set({ phase: 'ENDED' });
+        saveGameState(get());
+        safeEmit('game-state-update', buildPayload(get()));
+        return;
+      }
+    }
+    
+    // Move to next round
+    const updatedShootout = {
+      ...shootout,
+      currentRound: shootout.currentRound + 1,
+    };
+    
+    // Add new bullets for sudden death rounds
+    if (shootout.suddenDeath && updatedShootout.currentRound > shootout.bulletsA.length) {
+      updatedShootout.bulletsA = [...shootout.bulletsA, 'pending' as PenaltyBulletState];
+      updatedShootout.bulletsB = [...shootout.bulletsB, 'pending' as PenaltyBulletState];
+    }
+    
+    set({ penaltyShootout: updatedShootout });
+    saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },
   };

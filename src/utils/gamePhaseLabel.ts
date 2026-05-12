@@ -14,6 +14,8 @@ export function phaseLabel(phase: GamePhase): string {
       return 'Derde Helft';
     case 'FOURTH_HALF':
       return 'Vierde Helft';
+    case 'PENALTY_SHOOTOUT':
+      return 'Vrije Worpen';
     case 'ENDED':
       return 'Afgelopen';
   }
