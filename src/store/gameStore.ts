@@ -383,13 +383,17 @@ export const useGameStore = create<GameStore>((set, get) => {
     const state = get();
     if (!isActiveHalf(state.phase)) return;
     
+    const half = state.phase;
     const now = Date.now();
     set({
       playedTimeMs: 0,
       clockRunning: false,
       halfStartTimeMs: now,
       lastSavedTimeMs: now,
-      restMinute: null
+      restMinute: null,
+      restMinutesUsedA: { ...state.restMinutesUsedA, [half]: 0 },
+      restMinutesUsedB: { ...state.restMinutesUsedB, [half]: 0 },
+      restMinutesUsedReferee: { ...state.restMinutesUsedReferee, [half]: 0 },
     });
     
     saveGameState(get());

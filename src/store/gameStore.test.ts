@@ -206,3 +206,61 @@ describe('gameStore – tickClock', () => {
   });
 });
 
+describe('gameStore – resetCurrentHalf', () => {
+  beforeEach(resetStore);
+
+  it('resets rest minutes used for the current half', () => {
+    useGameStore.setState({
+      phase: 'FIRST_HALF',
+      config: validConfig,
+      playedTimeMs: 5000,
+      clockRunning: false,
+      restMinutesUsedA: { FIRST_HALF: 1, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedB: { FIRST_HALF: 1, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedReferee: { FIRST_HALF: 1, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    });
+    useGameStore.getState().resetCurrentHalf();
+    const state = useGameStore.getState();
+    expect(state.playedTimeMs).toBe(0);
+    expect(state.clockRunning).toBe(false);
+    expect(state.restMinute).toBeNull();
+    expect(state.restMinutesUsedA.FIRST_HALF).toBe(0);
+    expect(state.restMinutesUsedB.FIRST_HALF).toBe(0);
+    expect(state.restMinutesUsedReferee.FIRST_HALF).toBe(0);
+  });
+
+  it('only resets rest minutes for the current half, not other halves', () => {
+    useGameStore.setState({
+      phase: 'SECOND_HALF',
+      config: validConfig,
+      playedTimeMs: 3000,
+      clockRunning: false,
+      restMinutesUsedA: { FIRST_HALF: 2, SECOND_HALF: 1, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedB: { FIRST_HALF: 1, SECOND_HALF: 1, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 1, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    });
+    useGameStore.getState().resetCurrentHalf();
+    const state = useGameStore.getState();
+    expect(state.restMinutesUsedA.SECOND_HALF).toBe(0);
+    expect(state.restMinutesUsedA.FIRST_HALF).toBe(2); // untouched
+    expect(state.restMinutesUsedB.SECOND_HALF).toBe(0);
+    expect(state.restMinutesUsedB.FIRST_HALF).toBe(1); // untouched
+    expect(state.restMinutesUsedReferee.SECOND_HALF).toBe(0);
+    expect(state.restMinutesUsedReferee.FIRST_HALF).toBe(0); // untouched
+  });
+
+  it('is a no-op outside an active half', () => {
+    useGameStore.setState({
+      phase: 'HALF_TIME',
+      config: validConfig,
+      playedTimeMs: 1000,
+      restMinutesUsedA: { FIRST_HALF: 1, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedB: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+      restMinutesUsedReferee: { FIRST_HALF: 0, SECOND_HALF: 0, THIRD_HALF: 0, FOURTH_HALF: 0 },
+    });
+    useGameStore.getState().resetCurrentHalf();
+    expect(useGameStore.getState().playedTimeMs).toBe(1000); // unchanged
+    expect(useGameStore.getState().restMinutesUsedA.FIRST_HALF).toBe(1); // unchanged
+  });
+});
+
