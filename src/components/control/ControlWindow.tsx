@@ -11,7 +11,6 @@ import { InitiatorPopup } from './InitiatorPopup';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { phaseLabel } from '../../utils/gamePhaseLabel';
 import { DebugPanel } from './DebugPanel';
-import { useIsDevMachine } from '../../hooks/useIsDevMachine';
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -43,7 +42,6 @@ export default function ControlWindow() {
   const [showPenaltyConfirm, setShowPenaltyConfirm] = useState(false);
   const [penaltyTeam, setPenaltyTeam] = useState<'A' | 'B' | null>(null);
   const abandonGame = useGameStore((s) => s.abandonGame);
-  const isDevMachine = useIsDevMachine();
 
   const handleShowPenaltyConfirm = (team: 'A' | 'B') => {
     setPenaltyTeam(team);
@@ -283,7 +281,7 @@ export default function ControlWindow() {
       />
     )}
 
-      {(IS_DEV || isDevMachine) && <DebugPanel />}
+      {IS_DEV && <DebugPanel />}
       </div>
   );
 }
