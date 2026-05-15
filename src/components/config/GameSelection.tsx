@@ -81,7 +81,7 @@ export function GameSelection() {
       <div className="w-full h-full flex flex-col p-6">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Krachtbal Scoreboard</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Krachtbal Scorebord</h1>
           </div>
           <p className="text-slate-600 text-lg">Selecteer een wedstrijd om te beginnen</p>
         </div>
