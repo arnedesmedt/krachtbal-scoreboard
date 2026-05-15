@@ -71,7 +71,7 @@ export default function ControlWindow() {
         
         {/* Top Navigation Bar */}
         <nav className="bg-white/80 backdrop-blur-sm shadow-xl border-b border-white/20" style={{ height: 'clamp(60px, 8vh, 80px)' }}>
-          <div className="h-full flex items-center justify-between px-6">
+          <div className="h-full grid grid-cols-3 items-center px-6">
             {/* League and Phase */}
             <div className="flex items-center gap-6">
               {league && (
@@ -84,8 +84,8 @@ export default function ControlWindow() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
+            {/* Stop Button - Center */}
+            <div className="flex items-center justify-center">
               <button
                 type="button"
                 onClick={() => setShowQuitConfirm(true)}
@@ -96,6 +96,10 @@ export default function ControlWindow() {
                 <span style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>⏹</span>
                 Stop
               </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={playBuzzer}
