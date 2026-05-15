@@ -52,5 +52,6 @@ function buildPayloadFromStore(state: ReturnType<typeof useGameStore.getState>):
     restMinutesUsedB: state.restMinutesUsedB,
     restMinutesUsedReferee: state.restMinutesUsedReferee,
     presentationTheme: state.presentationTheme,
+    penaltyShootout: state.penaltyShootout,
   };
 }

@@ -8,8 +8,6 @@ export function RestMinutePanel() {
   const clockRunning = useGameStore((s) => s.clockRunning);
   const phase = useGameStore((s) => s.phase);
   const startRestMinute = useGameStore((s) => s.startRestMinute);
-  const cancelRestMinute = useGameStore((s) => s.cancelRestMinute);
-  const assignRestMinute = useGameStore((s) => s.assignRestMinute);
   const restMinutesUsedA = useGameStore((s) => s.restMinutesUsedA);
   const restMinutesUsedB = useGameStore((s) => s.restMinutesUsedB);
   const restMinutesUsedReferee = useGameStore((s) => s.restMinutesUsedReferee);

@@ -14,7 +14,7 @@ function PenaltyBulletRow({
   currentRound: number; 
   theme?: 'light' | 'dark';
 }) {
-  const getBulletColor = (state: PenaltyBulletState, index: number) => {
+  const getBulletColor = (state: PenaltyBulletState) => {
     if (state === 'scored') return theme === 'dark' ? '#10b981' : '#059669'; // green-500/green-600
     if (state === 'missed') return theme === 'dark' ? '#ef4444' : '#dc2626'; // red-500/red-600
     return theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'; // gray
@@ -38,7 +38,7 @@ function PenaltyBulletRow({
               index === currentRound - 1 && bullet === 'pending' ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
             }`}
             style={{
-              backgroundColor: getBulletColor(bullet, index),
+              backgroundColor: getBulletColor(bullet),
               borderColor: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
             }}
           />

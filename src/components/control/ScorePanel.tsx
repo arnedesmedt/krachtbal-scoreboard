@@ -1,5 +1,4 @@
 import { useGameStore } from '../../store/gameStore';
-import { useBuzzer } from '../../hooks/useBuzzer';
 import type { PenaltyBulletState } from '../../types/game';
 
 const MAX_PENALTIES = 3;
@@ -7,22 +6,6 @@ const MAX_PENALTIES = 3;
 interface ScorePanelProps {
   team: 'A' | 'B';
   onShowPenaltyConfirm?: () => void;
-}
-
-function PenaltyDots({ count }: { count: number }) {
-  return (
-    <div className="flex gap-1 justify-center mb-3">
-      {Array.from({ length: MAX_PENALTIES }).map((_, i) => (
-        <span
-          key={i}
-          className={`font-black ${i < count ? 'text-red-500' : 'text-slate-200'}`}
-          style={{ fontSize: 'clamp(1rem, 2.5vw, 2rem)' }}
-        >
-          ✕
-        </span>
-      ))}
-    </div>
-  );
 }
 
 function PenaltyBullets({ 
@@ -61,8 +44,6 @@ function PenaltyBullets({
 }
 
 export function ScorePanel({ team, onShowPenaltyConfirm }: ScorePanelProps) {
-  const { playBuzzer } = useBuzzer();
-  
   const scoreA = useGameStore((s) => s.scoreA);
   const scoreB = useGameStore((s) => s.scoreB);
   const penaltiesA = useGameStore((s) => s.penaltiesA);
