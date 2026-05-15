@@ -453,7 +453,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       get().clearRestMinute();
     } else {
       // Fire 5-second buzzer once — trigger slightly early to compensate for audio output latency
-      const crossed5s = !state.restMinute.buzzerFired5s && remaining <= 5_150;
+      const crossed5s = !state.restMinute.buzzerFired5s && remaining <= 6_150;
       if (crossed5s) playBuzzer();
       set({ 
         restMinute: { 
@@ -497,7 +497,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     const newTime = state.playedTimeMs + deltaMs;
     // Fire 1-minute warning buzzer when crossing the 1-minute-remaining threshold
     // Only if no rest minute is currently active
-    const threshold1m = halfTimeLengthMs - 60_000;
+    const threshold1m = halfTimeLengthMs - 61_000;
     if (threshold1m > 0 && state.playedTimeMs < threshold1m && newTime >= threshold1m && !state.restMinute) {
       playBuzzer();
     }
