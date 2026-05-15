@@ -47,7 +47,7 @@ describe('ScorePanel', () => {
     const addTeamPenalty = vi.fn();
     useGameStore.setState({ addTeamPenalty } as never);
     render(<ScorePanel team="A" />);
-    await userEvent.click(screen.getByRole('button', { name: /Straf toevoegen Team A/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Kruisje toevoegen Team A/i }));
     expect(addTeamPenalty).toHaveBeenCalledWith('A');
   });
 });

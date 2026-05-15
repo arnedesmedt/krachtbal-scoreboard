@@ -224,20 +224,20 @@ export function ScorePanel({ team, onShowPenaltyConfirm }: ScorePanelProps) {
                     type="button"
                     onClick={() => removeTeamPenalty(team)}
                     disabled={penalties <= 0}
-                    aria-label={`Straf verwijderen Team ${team}`}
+                    aria-label={`Kruisje verwijderen Team ${team}`}
                     className="flex-1 px-3 py-3 bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 disabled:from-slate-50 disabled:to-slate-100 disabled:opacity-50 rounded-lg font-semibold text-slate-700 transition-colors duration-200 shadow-md"
                     style={{ fontSize: 'clamp(0.75rem, 1.4vw, 0.9rem)' }}
                   >
-                    − Straf
+                    − Kruisje
                   </button>
                   <button
                     type="button"
                     onClick={handleAddPenalty}
-                    aria-label={penalties >= MAX_PENALTIES ? `Straffen resetten Team ${team}` : `Straf toevoegen Team ${team}`}
+                    aria-label={penalties >= MAX_PENALTIES ? `Kruisjes resetten Team ${team}` : `Kruisje toevoegen Team ${team}`}
                     className={`flex-1 px-3 py-3 ${penalties >= MAX_PENALTIES ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700' : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'} text-white rounded-lg font-semibold transition-colors duration-200 shadow-md`}
                     style={{ fontSize: 'clamp(0.75rem, 1.4vw, 0.9rem)' }}
                   >
-                    {penalties >= MAX_PENALTIES ? 'Reset' : '+ Straf'}
+                    {penalties >= MAX_PENALTIES ? 'Reset' : '+ Kruisje'}
                   </button>
                 </div>
               )}
