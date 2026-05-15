@@ -96,16 +96,6 @@ export default function PresentationWindow() {
   const isDark = theme === 'dark';
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
 
-  const restMinuteInitiator = state.restMinute
-    ? state.restMinute.initiatorTeam === 'A'
-      ? state.teamA.name
-      : state.restMinute.initiatorTeam === 'B'
-      ? state.teamB.name
-      : state.restMinute.initiatorTeam === 'referee'
-      ? 'Scheidsrechter'
-      : 'Rustminuut'
-    : null;
-
   return (
     <div
       className={`h-screen flex flex-col px-[3vh] py-[3vh] overflow-hidden ${isDark ? 'bg-gradient-to-br from-gray-950 via-slate-900 to-indigo-950 text-white' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-gray-900'}`}
@@ -152,20 +142,6 @@ export default function PresentationWindow() {
         <div className="flex items-center" style={{ gap: 'clamp(1rem, 2.5vw, 2.5rem)' }}>
           {state.restMinute && (
             <div className="flex items-center" style={{ gap: 'clamp(0.8rem, 1.5vw, 1.5rem)' }}>
-              <span
-                className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full font-semibold shadow-md"
-                style={{ fontSize: 'clamp(1rem, 2vw, 1.6rem)', padding: '0.6vh 2vw' }}
-              >
-                Rustminuut
-              </span>
-              {restMinuteInitiator && restMinuteInitiator !== 'Rustminuut' && (
-                <span
-                  className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full font-semibold shadow-md"
-                  style={{ fontSize: 'clamp(1rem, 2vw, 1.6rem)', padding: '0.6vh 2vw' }}
-                >
-                  {restMinuteInitiator}
-                </span>
-              )}
               <div className="flex items-center" style={{ gap: 'clamp(0.4rem, 0.8vw, 0.8rem)' }}>
                 <div
                   className="rounded-full flex-shrink-0 bg-red-500 shadow-lg animate-pulse"
@@ -173,7 +149,7 @@ export default function PresentationWindow() {
                 />
                 <div
                   className="font-mono font-black tracking-widest leading-none"
-                  style={{ fontSize: 'clamp(2rem, 5vw, 4.5rem)', color: '#f97316' }}
+                  style={{ fontSize: 'clamp(3rem, 8vw, 7rem)', color: '#f97316' }}
                 >
                   {formatMs(state.restMinute.remainingMs)}
                 </div>
