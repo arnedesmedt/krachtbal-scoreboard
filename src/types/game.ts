@@ -7,6 +7,7 @@ export interface PenaltyShootoutState {
   bulletsB: PenaltyBulletState[];
   currentRound: number; // 1-based, starts at 1
   suddenDeath: boolean; // true when initial 4 rounds are tied
+  firstTeam: 'A' | 'B' | null; // null = not yet chosen; determines throw order
 }
 
 export type RestMinuteInitiator = 'A' | 'B' | 'referee';

@@ -131,6 +131,7 @@ interface GameActions {
   startFourthHalf: () => void;
   startPenaltyShootout: () => void;
   setPenaltyBullet: (team: 'A' | 'B', roundIndex: number, state: PenaltyBulletState) => void;
+  setFirstTeam: (team: 'A' | 'B') => void;
   nextPenaltyRound: () => void;
   resetGame: () => void;
   abandonGame: () => Promise<void>;
@@ -633,6 +634,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       bulletsB: Array(4).fill('pending' as PenaltyBulletState),
       currentRound: 1,
       suddenDeath: false,
+      firstTeam: null,
     };
     
     set({ phase: 'PENALTY_SHOOTOUT', penaltyShootout });
@@ -640,20 +642,34 @@ export const useGameStore = create<GameStore>((set, get) => {
     safeEmit('game-state-update', buildPayload(get()));
   },
 
-  setPenaltyBullet(team, roundIndex, state) {
+  setPenaltyBullet(team, roundIndex, bulletState) {
     const current = get();
     if (!current.penaltyShootout) return;
-    if (roundIndex >= current.penaltyShootout.bulletsA.length) return;
-    
-    const updatedShootout = { ...current.penaltyShootout };
+
+    const shootout = current.penaltyShootout;
+    if (roundIndex >= shootout.bulletsA.length) return;
+
+    // Detect edit vs new throw
+    const existingBullet = team === 'A' ? shootout.bulletsA[roundIndex] : shootout.bulletsB[roundIndex];
+    const isEdit = existingBullet !== 'pending';
+
+    const updatedShootout = { ...shootout };
     if (team === 'A') {
       updatedShootout.bulletsA = [...updatedShootout.bulletsA];
-      updatedShootout.bulletsA[roundIndex] = state;
+      updatedShootout.bulletsA[roundIndex] = bulletState;
     } else {
       updatedShootout.bulletsB = [...updatedShootout.bulletsB];
-      updatedShootout.bulletsB[roundIndex] = state;
+      updatedShootout.bulletsB[roundIndex] = bulletState;
     }
-    
+
+    if (isEdit) {
+      // Just correct the result — no round advancement or game-end logic
+      set({ penaltyShootout: updatedShootout });
+      saveGameState(get());
+      safeEmit('game-state-update', buildPayload(get()));
+      return;
+    }
+
     const scoredA = updatedShootout.bulletsA.filter(b => b === 'scored').length;
     const scoredB = updatedShootout.bulletsB.filter(b => b === 'scored').length;
     const decidedA = updatedShootout.bulletsA.filter(b => b !== 'pending').length;
@@ -673,14 +689,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     }
 
     // Check if a round just completed (both teams have the same number of decided bullets)
-    const assignedA = decidedA;
-    const assignedB = decidedB;
-    
-    if (assignedA === assignedB) {
-      const completedRound = assignedA;
-      
+    if (decidedA === decidedB) {
+      const completedRound = decidedA;
+
       if (completedRound >= 4) {
-        
         if (scoredA !== scoredB) {
           // Winner determined — end the game
           set({ penaltyShootout: { ...updatedShootout, currentRound: completedRound }, phase: 'ENDED' });
@@ -699,8 +711,17 @@ export const useGameStore = create<GameStore>((set, get) => {
         updatedShootout.currentRound = completedRound + 1;
       }
     }
-    
+
     set({ penaltyShootout: updatedShootout });
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  setFirstTeam(team) {
+    const current = get();
+    if (!current.penaltyShootout) return;
+    if (current.penaltyShootout.firstTeam !== null) return;
+    set({ penaltyShootout: { ...current.penaltyShootout, firstTeam: team } });
     saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
   },

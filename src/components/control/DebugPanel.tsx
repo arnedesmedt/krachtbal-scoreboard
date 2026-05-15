@@ -109,6 +109,7 @@ const PHASE_JUMPS: PhaseJump[] = [
         bulletsB: ['pending', 'pending', 'pending', 'pending'],
         currentRound: 1,
         suddenDeath: false,
+        firstTeam: null,
       },
     },
   },

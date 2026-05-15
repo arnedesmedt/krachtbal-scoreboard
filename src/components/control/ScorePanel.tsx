@@ -81,12 +81,17 @@ export function ScorePanel({ team, onShowPenaltyConfirm }: ScorePanelProps) {
   };
 
   const showPenaltyBullets = penaltyShootout && phase === 'PENALTY_SHOOTOUT';
-  
+
   const teamBullets = team === 'A' ? penaltyShootout?.bulletsA : penaltyShootout?.bulletsB;
   const assignedA = penaltyShootout?.bulletsA.filter(b => b !== 'pending').length ?? 0;
   const assignedB = penaltyShootout?.bulletsB.filter(b => b !== 'pending').length ?? 0;
   const nextPendingIndex = teamBullets?.findIndex(b => b === 'pending') ?? -1;
-  const isMyTurn = team === 'A' ? assignedA <= assignedB : assignedA > assignedB;
+  const firstTeam = penaltyShootout?.firstTeam ?? null;
+  const totalDecided = assignedA + assignedB;
+  const currentTurn: 'A' | 'B' | null = firstTeam !== null
+    ? (totalDecided % 2 === 0 ? firstTeam : (firstTeam === 'A' ? 'B' : 'A'))
+    : null;
+  const isMyTurn = currentTurn === team;
   const canAssign = showPenaltyBullets && nextPendingIndex !== -1 && isMyTurn;
 
   return (

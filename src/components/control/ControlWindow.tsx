@@ -42,6 +42,8 @@ export default function ControlWindow() {
   const [showPenaltyConfirm, setShowPenaltyConfirm] = useState(false);
   const [penaltyTeam, setPenaltyTeam] = useState<'A' | 'B' | null>(null);
   const abandonGame = useGameStore((s) => s.abandonGame);
+  const penaltyShootout = useGameStore((s) => s.penaltyShootout);
+  const setFirstTeam = useGameStore((s) => s.setFirstTeam);
 
   const handleShowPenaltyConfirm = (team: 'A' | 'B') => {
     setPenaltyTeam(team);
@@ -293,6 +295,36 @@ export default function ControlWindow() {
         confirmText="Ja, straf toekennen"
         cancelText="Annuleren"
       />
+    )}
+
+      {/* First-Team Selection Overlay */}
+    {phase === 'PENALTY_SHOOTOUT' && penaltyShootout?.firstTeam === null && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999]">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+          <h3 className="text-xl font-bold text-slate-800 text-center mb-2">
+            Vrije Worpen
+          </h3>
+          <p className="text-slate-500 text-center mb-6">
+            Welk team begint met gooien?
+          </p>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => setFirstTeam('A')}
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md"
+            >
+              {config?.teamA.name || 'Team A'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFirstTeam('B')}
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md"
+            >
+              {config?.teamB.name || 'Team B'}
+            </button>
+          </div>
+        </div>
+      </div>
     )}
 
       {IS_DEV && <DebugPanel />}
