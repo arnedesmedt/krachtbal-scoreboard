@@ -117,6 +117,7 @@ interface GameActions {
   toggleClock: () => void;
   adjustScore: (team: 'A' | 'B', delta: number) => void;
   addTeamPenalty: (team: 'A' | 'B') => void;
+  removeTeamPenalty: (team: 'A' | 'B') => void;
   setPenalties: (team: 'A' | 'B', count: number) => void;
   resetCurrentHalf: () => void;
   startRestMinute: () => void;
@@ -349,6 +350,18 @@ export const useGameStore = create<GameStore>((set, get) => {
       const next = (state.penaltiesB + 1) % 4;
       console.log('addTeamPenalty setting penaltiesB:', next);
       set({ penaltiesB: next });
+    }
+    saveGameState(get());
+    safeEmit('game-state-update', buildPayload(get()));
+  },
+
+  removeTeamPenalty(team) {
+    const state = get();
+    if (state.phase === 'SETUP') return;
+    if (team === 'A') {
+      set({ penaltiesA: Math.max(0, state.penaltiesA - 1) });
+    } else {
+      set({ penaltiesB: Math.max(0, state.penaltiesB - 1) });
     }
     saveGameState(get());
     safeEmit('game-state-update', buildPayload(get()));
