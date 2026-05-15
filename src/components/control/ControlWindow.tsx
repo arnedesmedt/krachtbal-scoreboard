@@ -30,7 +30,7 @@ export default function ControlWindow() {
   const resetCurrentHalf = useGameStore((s) => s.resetCurrentHalf);
   useGameTimer();
 
-  const half: 'FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' = 
+  const half: 'FIRST_HALF' | 'SECOND_HALF' | 'THIRD_HALF' | 'FOURTH_HALF' =
     phase === 'FIRST_HALF' || phase === 'SECOND_HALF' || phase === 'THIRD_HALF' || phase === 'FOURTH_HALF' 
       ? phase 
       : 'FIRST_HALF';
@@ -86,6 +86,16 @@ export default function ControlWindow() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowQuitConfirm(true)}
+                title="Wedstrijd stoppen"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold shadow-md transition-colors duration-200"
+                style={{ fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)' }}
+              >
+                <span style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>⏹</span>
+                Stop
+              </button>
               <button
                 type="button"
                 onClick={playBuzzer}

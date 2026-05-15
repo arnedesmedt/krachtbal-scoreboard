@@ -163,27 +163,15 @@ export function ClockDisplay({ onResetClick, onQuitClick }: ClockDisplayProps) {
         ) : (
           <div className="flex gap-2">
             {clockRunning ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onResetClick}
-                  aria-label="Helft resetten"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
-                  style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
-                >
-                  🔄 Reset
-                </button>
-                <button
-                  type="button"
-                  onClick={onQuitClick}
-                  disabled={!isActiveHalf}
-                  aria-label="Spel stoppen"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg disabled:from-slate-400 disabled:to-slate-500 disabled:opacity-50"
-                  style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
-                >
-                  ⏹ Stop
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={onResetClick}
+                aria-label="Helft resetten"
+                className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold transition-colors duration-200 shadow-lg"
+                style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1rem)' }}
+              >
+                🔄 Reset
+              </button>
             ) : (
               <button
                 type="button"
