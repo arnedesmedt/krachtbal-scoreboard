@@ -80,7 +80,7 @@ export function ScorePanel({ team, onShowPenaltyConfirm }: ScorePanelProps) {
     setPenaltyBullet(team, roundIndex, state);
   };
 
-  const showPenaltyBullets = penaltyShootout && phase === 'PENALTY_SHOOTOUT';
+  const showPenaltyBullets = penaltyShootout && (phase === 'PENALTY_SHOOTOUT' || phase === 'ENDED');
 
   const teamBullets = team === 'A' ? penaltyShootout?.bulletsA : penaltyShootout?.bulletsB;
   const assignedA = penaltyShootout?.bulletsA.filter(b => b !== 'pending').length ?? 0;
